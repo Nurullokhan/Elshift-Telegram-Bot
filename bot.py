@@ -284,7 +284,7 @@ async def contact_handler(message: types.Message):
         "📍 <b>Manzil:</b> <a href='https://maps.app.goo.gl/rE3iPvTM4Z3ezf1h7'>Farg'ona viloyati, Marg'ilon shahri</a>\n"
         "📱 <b>Telefon:</b> +998947010555\n"
         "🕒 <b>Ish vaqti:</b> 09:00 – 18:00\n"
-        "❌ <b>Dam olish kuni:</b> Juma"
+        "☪️ <b>Dam olish kuni:</b> Juma"
     )
     await message.answer(text, parse_mode="HTML", disable_web_page_preview=True)
 
