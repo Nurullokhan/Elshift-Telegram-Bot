@@ -144,7 +144,7 @@ jobs_menu = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text=JOB_TITLE_MASTER),
          KeyboardButton(text=JOB_TITLE_APPRENTICE)],
-         [KeyboardButton(text=JOB_TITLE_ROVER)]
+        #  [KeyboardButton(text=JOB_TITLE_ROVER)]
         [KeyboardButton(text=BACK_BUTTON)]
     ],
     resize_keyboard=True
