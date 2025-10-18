@@ -79,6 +79,21 @@ class ApprenticeForm(StatesGroup):
     additional = State()
     submitting = State()
 
+# --- FSM States for ROVERCHI Anketasi (StudentForm) ---
+class StudentForm(StatesGroup):
+    name_surname = State()
+    age = State()
+    phone = State()
+    address_region = State()
+    address_district = State()
+    previous_job = State()
+    previos_salary = State()
+    reason_left = State()
+    computer_skill = State()
+    start_date = State()
+    additional = State()
+    submitting = State()
+
 # --- FSM States for Ustalar Anketasi (MasterForm) ---
 class MasterForm(StatesGroup):
     name_surname = State()
@@ -113,6 +128,7 @@ BACK_BUTTON = "⬅ Orqaga"
 CANCEL_BUTTON = "Bekor qilish"
 JOB_TITLE_APPRENTICE = "👨‍🎓 Ish o'rganuvchi"
 JOB_TITLE_MASTER = "👷 Usta"
+JOB_TITLE_ROVER = "👨‍🎓 Shogird (Roverchi)"
 
 # --- Tugmalar (asosiy menyu) ---
 main_menu = ReplyKeyboardMarkup(
@@ -126,7 +142,10 @@ main_menu = ReplyKeyboardMarkup(
 # --- "Bo'sh ish o'rinlari" menyusi ---
 jobs_menu = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text=JOB_TITLE_MASTER), KeyboardButton(text=JOB_TITLE_APPRENTICE)],
+        [KeyboardButton(text=JOB_TITLE_MASTER),
+         KeyboardButton(text=JOB_TITLE_APPRENTICE),
+         KeyboardButton(text=JOB_TITLE_ROVER)
+         ],
         [KeyboardButton(text=BACK_BUTTON)]
     ],
     resize_keyboard=True
@@ -603,6 +622,100 @@ async def app_additional_handler(message: types.Message, state: FSMContext):
 
     await state.clear()
 
+# ========================================
+# --- 👨‍🎓 SHOGIRD ANKETASI (ROVERCHI) ---
+# ========================================
+
+@dp.message(F.text == JOB_TITLE_ROVER)
+async def student_handler(message: types.Message, state: FSMContext):
+    initial_form_keyboard = ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=CANCEL_BUTTON)]], resize_keyboard=True
+    )
+    # 1-savol
+    await message.answer("Shogirdlar (Roverchi) anketasini to'ldirishni boshlaymiz.\n\n"
+                         "Iltimos, <b>Ism va familyangizni</b> yozing:",
+                         reply_markup=initial_form_keyboard,
+                         parse_mode="HTML")
+    await state.set_state(StudentForm.name_surname)
+
+# -- 1. Ism va familya (StudentForm) ---
+@dp.message(StudentForm.name_surname)
+async def student_name_handler(message: types.Message, state: FSMContext):
+    await state.update_data(name_surname=message.text)
+
+    # 2-savol: Yosh
+    await message.answer("Yoshingiz nechchida?\n"
+                         "<b>(Iltimos, faqat raqam bilan kiriting)</b>\n",
+                         "Yosh chegarasi: <b>30 yosh</b>",
+                         reply_markup=ReplyKeyboardMarkup(
+                             keyboard=[[KeyboardButton(text=CANCEL_BUTTON)]], resize_keyboard=True
+                         ),
+                         parse_mode="HTML")
+    await state.set_state(StudentForm.age)
+
+# --- 2. Yoshingiz (StudentForm) ---
+@dp.message(StudentForm.age)
+async def student_age_handler(message: types.Message, state: FSMContext):
+    text = message.text.strip()
+    if not text.isdigit() or not (16 <= int(text) <= 30):
+        await message.answer("Iltimos, yoshingizni faqat raqamlarda kiriting (Masalan: 30) va 16 yoshdan katta bo'lsin.")
+        return
+    
+    await state.update_data(age=text)
+
+    # 3-savol: Telefon raqami
+    await message.answer("<b>Telefon raqamingizni</b> kiriting yoki tugma orqali <b>ulashing</b>:\n"
+                         "<b>(Namuna: +998901234567)</b>",
+                         reply_markup=phone_keyboard,
+                         parse_mode="HTML")
+    await state.set_state(StudentForm.phone)
+
+# --- 3. Telefon raqami (StudentForm) ---
+@dp.message(StudentForm.phone)
+async def student_phone_handler(message: types.Message, state: FSMContext):
+    phone_number = None
+    if message.contact:
+        phone_number = message.contact.phone_number
+    elif message.text:
+        text = message.text.replace(" ", "").strip()
+        if re.match(r'^\+?\d{9,15}$', text):
+            phone_number = text
+
+        if not phone_number:
+            await message.answer("Iltimos, telefon raqamini to'g'ri formatda kiriting (+998...) yoki tugma orqali ulashing.")
+            return
+        
+        await state.update_data(phone=phone_number)
+
+        # 4-savol: Viloyat tanlash
+        region_buttons = ReplyKeyboardMarkup(
+            keyboard=[
+                [KeyboardButton(text="Farg'ona"), KeyboardButton(text="Namangan")],
+                [KeyboardButton(text="Andijon")],
+                [KeyboardButton(text=CANCEL_BUTTON)]
+            ],
+            resize_keyboard=True
+        )
+        await message.answer("Endi <b>viloyatingizni</b> tanlang:", reply_markup=region_buttons, parse_mode="HTML")
+        await state.set_state(StudentForm.address_region)
+
+# --- 5. Manzil (Viloyat tanlash - StudentForm) ---
+@dp.message(StudentForm.address_region)
+async def student_address_region_handler(message: types.Message, state: FSMContext):
+    region = message.text
+    if region not in REGIONS_DISTRICTS:
+        await message.answer("Iltimos, menyudagi tugmalardan viloyatni tanlang.")
+        return
+    
+    await state.update_data(address_region=region)
+    district_keyboard = create_district_keyboard(region)
+
+    # 5-savol. Tuman/shahar tanlash
+    await message.answer(f"Siz <b>{region}</b>ni tanladingiz.\n"
+                         f"Endi <b> tuman yoki shaharni</b> tanlang:",
+                         reply_markup=district_keyboard,
+                         parse_mode="HTML")
+    await state.set_state(StudentForm.address_district)
 
 # ======================================
 # --- 👷 USTALAR ANKETASI (MASTER) ---
