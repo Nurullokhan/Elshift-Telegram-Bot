@@ -292,7 +292,8 @@ async def about_handler(message: types.Message):
 # Bo'sh ish o'rinlari
 @dp.message(F.text == "💼 Bo'sh ish o'rinlari")
 async def jobs_handler(message: types.Message):
-    await message.answer("Bo'sh ish o'rinlari bo‘limini tanlang 👇\n\nSiz kim bo'lib ishlamoqchisiz?", reply_markup=jobs_menu)
+    await message.answer("👷 <b>Usta</b> - Tajribangiz bo'lsa, tayyor obyektlar va bonusli ish sizni kutmoqda.\n\n👨‍🎓 <b>Ish o'rganuvchi</b> - 6 - 12 oyda usta bo'lib, <b>Elshift</b> jamoasida o'z o'rningizga ega bo'ling.\n\n👇 Quyidagilardan birini tanlang.",
+                         reply_markup=jobs_menu)
 
 # Aloqa
 @dp.message(F.text == "📞 Aloqa")
