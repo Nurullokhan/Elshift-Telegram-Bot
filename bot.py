@@ -101,30 +101,29 @@ class MasterForm(StatesGroup):
     phone = State()
     address_region = State()
     address_district = State()
-    specialty = State()      
-    experience_years = State() 
-    team_management = State()  
-    portfolio_link = State()   
-    expected_salary_usta = State() 
-    hardworking_usta = State() 
+    specialty = State()
+    experience_years = State()
+    team_management = State()
+    portfolio_link = State()      # Fayl / havola yuborish
+    more_portfolio = State()      # “Yana portfolio yuborasizmi?” savoli
+    expected_salary_usta = State()
+    hardworking_usta = State()
     start_date_usta = State()
-    submitting = State() # Ma'lumot yuborish holati
+    submitting = State()
 
 # --- Matn va Havolalar ---
 ELSHIFT_ABOUT = (
-    "🏢 <b>ELSHIFT kompaniyasi</b>\n\n"
-    "ELSHIFT — bu zamonaviy alukobond xizmati bilan shug‘ullanuvchi kompaniya bo‘lib, "
-    "binolarning tashqi va ichki fasadlarini sifatli va estetik jihatdan mukammal bezash bilan mashhur.\n\n"
-    "Bizning asosiy yo‘nalishlarimiz:\n"
-    "1️⃣ Binolarning tashqi va ichki fasadlarini zamonaviy uslubda bezash.\n"
-    "2️⃣ Montaj ishlari va sifatli materiallardan foydalanish.\n"
-    "3️⃣ Mijozlarga ishonchli va barqaror yechimlar taqdim etish.\n\n"
-    "📞 <b>Aloqa:</b> +998947010555\n"
-    "💬 <i>“Tanlovingizni oqlaydigan sifat va ishonch kafolati.”</i>"
+    "<b>«Elshift» qanday brend?</b>\n\n"
+    "<b>Elshift</b> — bu alukabond xizmati bilan shugʻillanuvchi kompaniya hisoblanadi, biz 12 yildan buyon xalqimizga alukabond xizmatini koʻrsatib kelyapmiz!\n\n"
+    "Bizni qadriyatimiz:\n\n"
+    "<b>Mijozlarga oʻz vaqtida va sifatli xizmat koʻrsatish - bu bizning eng asosiy tamoyilimiz.</b>\n\n"
+    "Elshift - tanlovingizni oqlaydigan sifatli va ishonchli alukabond xizmati!\n\n"
+    "<i>Yuqoridagi videoni koʻrib kompaniya  haqida ma'lumotlarni  rahbardan bilib olishingiz mumkin!</i>\n\n"
+    "📞 Aloqa uchun : +998947010555"
 )
 
 # --- Umumiy Tugmalar ---
-BACK_BUTTON = "⬅ Orqaga"
+BACK_BUTTON = "🔙 Orqaga"
 CANCEL_BUTTON = "Bekor qilish"
 JOB_TITLE_APPRENTICE = "👨‍🎓 Ish o'rganuvchi"
 JOB_TITLE_MASTER = "👷 Usta"
@@ -259,7 +258,14 @@ async def send_data_to_sheets(data: dict, sheet_name: str) -> bool:
 @dp.message(Command("start"))
 async def start_handler(message: types.Message, state: FSMContext):
     await state.clear()
-    await message.answer("Assalomu alaykum! Elshift botiga xush kelibsiz. Asosiy menyudan bo‘limni tanlang 👇", reply_markup=main_menu)
+    await message.answer("Assalomu alaykum!\n\n"
+                         "<b>«Elshift»</b> rasmiy botiga xush kelibsiz! Asosiy menyu orqali boʻlimlardan birini tanlang 👇",
+                         reply_markup=main_menu)
+    
+# @dp.message(F.text == "/chatid")
+# async def get_chat_id(message: types.Message):
+    # await message.answer(f"Chat ID: <code>{message.chat.id}</code>", parse_mode="HTML")
+
 
 # BACK_BUTTON handler
 @dp.message(F.text == BACK_BUTTON)
@@ -275,19 +281,23 @@ async def cancel_handler_in_form(message: types.Message, state: FSMContext):
     # Foydalanuvchini asosiy menyuga qaytaradi
     await message.answer("Anketa bekor qilindi. Asosiy menyuga qaytdingiz 👇", reply_markup=main_menu)
 
-# Biz haqimizda
+# --- Biz haqimizda ---
 @dp.message(F.text == "🏢 Biz haqimizda")
 async def about_handler(message: types.Message):
-    # 📸 Rasm faylini ko‘rsatamiz
-    photo = FSInputFile("elshift_logo.jpg")
+    try:
+        # 📸 Rasm faylini yuklaymiz
+        photo = FSInputFile("elshift_logo.jpg")
 
-    await message.answer_photo(
-        photo=photo,
-        caption=ELSHIFT_ABOUT,
-        reply_markup=social_media_keyboard,
-        parse_mode="HTML",
-        disable_web_page_preview=True
-    )
+        # 📩 Xabarni yuboramiz
+        await message.answer_photo(
+            photo=photo,
+            caption=ELSHIFT_ABOUT,
+            reply_markup=social_media_keyboard,
+            parse_mode="HTML",
+        )
+    except Exception as e:
+        logging.error(f"'Biz haqimizda' xabarini yuborishda xatolik: {e}")
+        await message.answer(ELSHIFT_ABOUT, parse_mode="HTML")
 
 # Bo'sh ish o'rinlari
 @dp.message(F.text == "💼 Bo'sh ish o'rinlari")
@@ -329,7 +339,7 @@ async def app_name_handler(message: types.Message, state: FSMContext):
     await state.update_data(name_surname=message.text)
     
     # 2-savol: Yosh kiritish bosqichi
-    await message.answer("Yoshingiz nechchida?\n"
+    await message.answer("<b>Yoshingiz nechchida?</b>\n"
                          "<b>(Iltimos, faqat raqam bilan kiriting)</b>",
                          reply_markup=ReplyKeyboardMarkup(
                              keyboard=[[KeyboardButton(text=CANCEL_BUTTON)]], resize_keyboard=True
@@ -342,7 +352,7 @@ async def app_name_handler(message: types.Message, state: FSMContext):
 async def app_age_handler(message: types.Message, state: FSMContext):
     text = message.text.strip()
     if not text.isdigit() or not (16 <= int(text) <= 60):
-        await message.answer("Iltimos, yoshingizni faqat raqamlarda kiriting (Masalan: 21) va 16 yoshdan katta bo'lsin.")
+        await message.answer("Iltimos, yoshingizni faqat raqamlarda kiriting (Masalan: 21) va 18 yoshdan katta bo'lsin.")
         return
         
     await state.update_data(age=text)
@@ -390,7 +400,7 @@ async def app_phone_handler(message: types.Message, state: FSMContext):
 async def app_address_region_handler(message: types.Message, state: FSMContext):
     region = message.text
     if region not in REGIONS_DISTRICTS:
-        await message.answer("Iltimos, yuqoridagi tugmalardan viloyatni tanlang.")
+        await message.answer("Iltimos, menyudagi tugmalardan viloyatni tanlang.")
         return
         
     await state.update_data(address_region=region)
@@ -418,8 +428,9 @@ async def app_address_district_handler(message: types.Message, state: FSMContext
     await state.update_data(address_district=district) 
     
     # 6-savol: Avvalgi ish
-    await message.answer("Avval qayerda ishlagansiz?\n"
-                         "<b>(Agar ishlamagan bo'lsangiz: Yo'q)</b>", reply_markup=ReplyKeyboardMarkup(
+    await message.answer("<b>Avval qayerda ishlagansiz va nima ish qilgansiz?</b>\n"
+                         "(Yoki ishlamaganman deb yozing.)", 
+                         reply_markup=ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text=CANCEL_BUTTON)]], resize_keyboard=True
     ), parse_mode="HTML")
     await state.set_state(ApprenticeForm.previous_job)
@@ -427,9 +438,35 @@ async def app_address_district_handler(message: types.Message, state: FSMContext
 # --- 6. Avvalgi ish (ApprenticeForm) ---
 @dp.message(ApprenticeForm.previous_job)
 async def app_previous_job_handler(message: types.Message, state: FSMContext):
-    await state.update_data(previous_job=message.text)
-    
-    # 7-savol: Avvalgi oylik
+    previous_job = message.text.strip()
+    await state.update_data(previous_job=previous_job)
+
+    # 🔹 Agar "Ishlamaganman" deb yozgan bo‘lsa, avvalgi ish savollarini o'tkazib yuboramiz
+    if previous_job.lower() in ["ishlamaganman", "yo'q", "yoq"]:
+        await state.update_data(previous_salary="Kiritilmagan")
+        await state.update_data(reason_left="Kiritilmagan")
+
+        # To‘g‘ridan-to‘g‘ri "Kutayotgan oylik" savoliga o‘tamiz
+        expected_salary_buttons = ReplyKeyboardMarkup(
+            keyboard=[
+                [KeyboardButton(text="1,000,000 so'm"), KeyboardButton(text="1,500,000 so'm")],
+                [KeyboardButton(text="2,000,000 so'm"), KeyboardButton(text="2,500,000 so'm")],
+                [KeyboardButton(text="3,000,000 so'm"), KeyboardButton(text="4,000,000 so'm")],
+                [KeyboardButton(text="5,000,000+ so'm"), KeyboardButton(text="Oylik muhim emas")],
+                [KeyboardButton(text="Boshqa summa")],
+                [KeyboardButton(text=CANCEL_BUTTON)]
+            ], resize_keyboard=True
+        )
+        await message.answer(
+            "Siz ilgari ishlamagan ekansiz.\n\nEndi biz bilan ishlashda <b>qancha oylik kutyapsiz</b>?\n"
+            "<b>(Tanlang yoki yozing)</b>",
+            reply_markup=expected_salary_buttons,
+            parse_mode="HTML"
+        )
+        await state.set_state(ApprenticeForm.expected_salary)
+        return
+
+    # 🔸 Aks holda, avvalgi oylikni so‘raymiz
     salary_buttons = ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="1,000,000 so'm"), KeyboardButton(text="1,500,000 so'm")],
@@ -440,10 +477,12 @@ async def app_previous_job_handler(message: types.Message, state: FSMContext):
             [KeyboardButton(text=CANCEL_BUTTON)]
         ], resize_keyboard=True
     )
-    await message.answer("Avvalgi joyingizda <b>oyligingiz qancha edi</b>?\n"
-                         "<b>(Tanlang yoki yozing)</b>",
-                         reply_markup=salary_buttons,
-                         parse_mode="HTML")
+    await message.answer(
+        "Avvalgi joyingizda <b>oyligingiz qancha edi</b>?\n"
+        "<b>(Tanlang yoki yozing)</b>",
+        reply_markup=salary_buttons,
+        parse_mode="HTML"
+    )
     await state.set_state(ApprenticeForm.previous_salary)
 
 # --- 7. Avvalgi oylik (ApprenticeForm) ---
@@ -483,7 +522,9 @@ async def app_expected_salary_handler(message: types.Message, state: FSMContext)
     await state.update_data(expected_salary=message.text)
 
     # 9.1. savol: Matematika
-    await message.answer("<b>Matematikani bilasizmi?</b>\nIltimos faqat <b>Ha</b> yoki <b>Yo'q</b> deb javob bering.",
+    await message.answer("<b>Matematikani qanchalik bilasiz?</b>\n"
+                         "(Gradus, metr, sm, kvadrat, va boshqa xisob kitoblar bilan ishlash)\n\n"
+                         "Iltimos, Agar erkin ishlay olsingiz <b>Ha</b> yoki <b>Yo'q</b> deb javob bering",
                          reply_markup=yes_no_buttons,
                          parse_mode="HTML")
     await state.set_state(ApprenticeForm.math_skill)
@@ -499,7 +540,7 @@ async def app_math_skill_handler(message: types.Message, state: FSMContext):
     await state.update_data(math_skill=message.text)
 
         # 10-savol: Maqsad
-    await message.answer("<b>Hunar o'rganishdan maqsadingiz</b> nima? Iltimos yozing.", reply_markup=ReplyKeyboardMarkup(
+    await message.answer("<b>Hunar o'rganishdan maqsadingiz</b> nima?\nIltimos yozing.", reply_markup=ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text=CANCEL_BUTTON)]], resize_keyboard=True
     ), parse_mode="HTML")
     await state.set_state(ApprenticeForm.goal)
@@ -510,8 +551,7 @@ async def app_goal_handler(message: types.Message, state: FSMContext):
     await state.update_data(goal=message.text)
     
     # 11-savol: Baland joyda ishlash
-    await message.answer("Siz <b>baland joylarda ishlashga tayyormisiz</b>?\n"
-                         "<b>(Masalan: Fasadda yoki narvonlarda)</b>",
+    await message.answer("Oldin lesada yoki baland joylarda ishlaganmisiz, ish sharoiti balandroq bo'lsa bunga tayyormisiz?",
                          reply_markup=yes_no_buttons,
                          parse_mode="HTML")
     await state.set_state(ApprenticeForm.hardworking)
@@ -519,8 +559,8 @@ async def app_goal_handler(message: types.Message, state: FSMContext):
 # --- 11. Baland joyda ishlash savoli (ApprenticeForm) ---
 @dp.message(ApprenticeForm.hardworking)
 async def app_hardworking_handler(message: types.Message, state: FSMContext):
-    if message.text not in ["Ha", "Yo'q"]:
-        await message.answer("Iltimos, faqat <b>Ha</b> yoki <b>Yo'q</b> tugmalaridan birini tanlang.", parse_mode="HTML")
+    if message.text not in ["Ha", "Yo'q", "O'rganmoqchiman"]:
+        await message.answer("Iltimos, <b>Ha</b> / <b>Yo'q</b> yoki <b>O'rganmoqchiman</b> tugmalaridan birini tanlang.", parse_mode="HTML")
         return
         
     await state.update_data(hardworking=message.text)
@@ -613,7 +653,7 @@ async def app_additional_handler(message: types.Message, state: FSMContext):
     
     # Foydalanuvchiga xabar
     if sheets_success and admin_success:
-        await message.answer("✅ Sizning arizangiz muvaffaqiyatli qabul qilindi va ma'lumotlar bazasiga saqlandi. Menejerlar 48 soat ichida aloqaga chiqishadi.", reply_markup=main_menu)
+        await message.answer("✅ Arizangiz muvaffaqiyatli qabul qilindi 😊\nMa’lumotlaringizni ko‘rib chiqamiz va mos bo‘lsangiz, albatta siz bilan bog‘lanamiz.", reply_markup=main_menu)
     elif sheets_success:
          await message.answer("⚠️ Arizangiz ma'lumotlar bazasiga saqlandi, ammo ma'murga xabar yuborishda texnik xatolik yuz berdi. Tez orada aloqaga chiqishadi.", reply_markup=main_menu)
     else:
@@ -894,28 +934,97 @@ async def master_team_handler(message: types.Message, state: FSMContext):
     await state.set_state(MasterForm.portfolio_link)
 
 # --- 9. Portfolio (MasterForm) ---
-@dp.message(MasterForm.portfolio_link)
+@dp.message(MasterForm.portfolio_link, F.content_type.in_({'text', 'photo', 'video'}))
 async def master_portfolio_handler(message: types.Message, state: FSMContext):
-    await state.update_data(portfolio_link=message.text)
-    
-    # 10-savol: Kutayotgan oylik maosh
-    await message.answer("<b>Kutayotgan oylik maoshingiz</b> qancha?\n"
-                         "<b>(So'mda yoki kelishilgan protsentda yozing)</b>", reply_markup=ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text=CANCEL_BUTTON)]], resize_keyboard=True
-    ), parse_mode="HTML")
-    await state.set_state(MasterForm.expected_salary_usta)
+    portfolio_list = (await state.get_data()).get("portfolio", [])
+    if not isinstance(portfolio_list, list):
+        portfolio_list = []
+
+    file_id = None
+    file_type = None
+    portfolio_link = None
+
+    try:
+        # 🖼️ Agar rasm yuborsa
+        if message.photo:
+            file_id = message.photo[-1].file_id
+            file_type = "photo"
+            sent = await bot.send_photo(
+                chat_id=Config.GROUP_ID,
+                photo=file_id,
+                caption=f"📁 Portfolio {message.from_user.full_name} dan"
+            )
+            portfolio_link = f"https://t.me/c/{str(Config.GROUP_ID)[4:]}/{sent.message_id}"
+
+        # 🎥 Agar video yuborsa
+        elif message.video:
+            file_id = message.video.file_id
+            file_type = "video"
+            sent = await bot.send_video(
+                chat_id=Config.GROUP_ID,
+                video=file_id,
+                caption=f"📁 Portfolio {message.from_user.full_name} dan"
+            )
+            portfolio_link = f"https://t.me/c/{str(Config.GROUP_ID)[4:]}/{sent.message_id}"
+
+        # 🔗 Agar oddiy havola yuborsa
+        else:
+            file_id = message.text
+            file_type = "link"
+            portfolio_link = file_id
+
+        # 🧩 Portfolioni ro‘yxatga qo‘shamiz
+        portfolio_list.append({
+            "file_id": file_id,
+            "type": file_type,
+            "link": portfolio_link
+        })
+        await state.update_data(portfolio=portfolio_list)
+
+        # ❓ Yana portfolio yuboradimi?
+        await message.answer(
+            "Yana portfolio (rasm/video/havola) yubormoqchimisiz?",
+            reply_markup=yes_no_buttons,
+            parse_mode="HTML"
+        )
+        await state.set_state(MasterForm.more_portfolio)
+
+    except Exception as e:
+        logging.error(f"Portfolio yuborishda xatolik: {e}")
+        await message.answer("❌ Faylni yuborishda xatolik yuz berdi. Iltimos, qayta urinib ko‘ring.")
+
+@dp.message(MasterForm.more_portfolio)
+async def master_more_portfolio_handler(message: types.Message, state: FSMContext):
+    if message.text not in ["Ha", "Yo'q"]:
+        await message.answer("Iltimos, faqat <b>Ha</b> yoki <b>Yo‘q</b> tugmasini tanlang.", parse_mode="HTML")
+        return
+
+    if message.text == "Ha":
+        await message.answer(
+            "Yana portfolio faylini (rasm/video/havola) yuboring:",
+            parse_mode="HTML"
+        )
+        await state.set_state(MasterForm.portfolio_link)
+    else:
+        await message.answer(
+            "💰 Endi <b>kutayotgan oylik maoshingizni</b> yozing.\n"
+            "<b>(So‘mda yoki kelishilgan protsentda yozing)</b>",
+            parse_mode="HTML"
+        )
+        await state.set_state(MasterForm.expected_salary_usta)
 
 # --- 10. Kutayotgan oylik maosh (MasterForm) ---
 @dp.message(MasterForm.expected_salary_usta)
 async def master_expected_salary_handler(message: types.Message, state: FSMContext):
     await state.update_data(expected_salary_usta=message.text)
-    
-    # 11-savol: Baland joyda ishlash
-    await message.answer("Siz <b>baland joylarda ishlashga tayyormisiz</b>?\n"
-                         "<b>(Masalan: Fasadda yoki narvonlarda)</b>",
-                         reply_markup=yes_no_buttons,
-                         parse_mode="HTML")
+    await message.answer(
+        "Siz <b>baland joylarda ishlashga tayyormisiz</b>?\n"
+        "<b>(Masalan: fasadda yoki narvonlarda)</b>",
+        reply_markup=yes_no_buttons,
+        parse_mode="HTML"
+    )
     await state.set_state(MasterForm.hardworking_usta)
+
 
 # --- 11. Baland joyda ishlash (MasterForm) ---
 @dp.message(MasterForm.hardworking_usta)
@@ -923,28 +1032,33 @@ async def master_hardworking_handler(message: types.Message, state: FSMContext):
     if message.text not in ["Ha", "Yo'q"]:
         await message.answer("Iltimos, faqat <b>Ha</b> yoki <b>Yo'q</b> tugmalaridan birini tanlang.", parse_mode="HTML")
         return
-        
-    await state.update_data(hardworking_usta=message.text)
 
-    # 12-savol: Ish boshlash
-    await message.answer("<b>Qachondan ish boshlay olasiz</b>?\n"
-                         "<b>(Masalan: Ertadan / Bir haftada)</b>", reply_markup=ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text=CANCEL_BUTTON)]], resize_keyboard=True
-    ), parse_mode="HTML")
+    await state.update_data(hardworking_usta=message.text)
+    await message.answer(
+        "<b>Qachondan ish boshlay olasiz</b>?\n"
+        "<b>(Masalan: Ertadan / Bir haftada)</b>",
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard=[[KeyboardButton(text=CANCEL_BUTTON)]],
+            resize_keyboard=True
+        ),
+        parse_mode="HTML"
+    )
     await state.set_state(MasterForm.start_date_usta)
 
-# --- 12. Ish boshlash (MasterForm SUBMIT) ---
+
+# --- 12. Ish boshlash (yakuniy bosqich) ---
 @dp.message(MasterForm.start_date_usta)
 async def master_start_date_handler(message: types.Message, state: FSMContext):
     await state.update_data(start_date_usta=message.text)
     data = await state.get_data()
-    
-    # Ma'lumot yuborish holatiga o'tish (ortiqcha bosishlarning oldini olish uchun)
     await state.set_state(MasterForm.submitting)
 
     full_address = f"{data.get('address_region', 'Kiritilmagan')} viloyati, {data.get('address_district', 'Kiritilmagan')}"
-    
-    # Xabar matnini tuzish (Admin uchun)
+
+    # 🧩 Bir nechta portfolio havolalarini birlashtiramiz
+    portfolio_list = data.get("portfolio", [])
+    portfolio_links = "\n".join([p.get("link", "") for p in portfolio_list]) or "Kiritilmagan"
+
     application_text = (
         f"👑 <b>YANGI USTA ANKETASI</b> 👑\n\n"
         f"<b>🆔 Foydalanuvchi ID:</b> <code>{message.from_user.id}</code>\n"
@@ -956,16 +1070,16 @@ async def master_start_date_handler(message: types.Message, state: FSMContext):
         f"<b>🔨 Mutaxassislik:</b> {data.get('specialty', 'Kiritilmagan')}\n"
         f"<b>🗓 Tajriba (yil):</b> {data.get('experience_years', 'Kiritilmagan')}\n"
         f"<b>👨‍💼 Jamoa boshqargan:</b> {data.get('team_management', 'Kiritilmagan')}\n"
-        f"<b>🔗 Portfolio:</b> {data.get('portfolio_link', 'Kiritilmagan')}\n"
+        f"<b>🔗 Portfolio:</b>\n{portfolio_links}\n"
         f"<b>💰 Kutayotgan maosh:</b> {data.get('expected_salary_usta', 'Kiritilmagan')}\n"
-        f"<b>💪 Baland joyda ishlashga tayyor:</b> {data.get('hardworking_usta', 'Kiritilmagan')}\n"
+        f"<b>💪 Baland joyda ishlash:</b> {data.get('hardworking_usta', 'Kiritilmagan')}\n"
         f"<b>📅 Ish boshlash:</b> {data.get('start_date_usta', 'Kiritilmagan')}\n"
-        f"<b>Vakansiya turi:</b> Usta"
+        f"<b>Vakansiya:</b> Usta"
     )
 
-    # Google Sheets ga yuborish uchun lug'atni tayyorlash
+    # Google Sheets uchun
     sheets_data = {
-        "Sana": str(datetime.now()), # Yuborilgan vaqt
+        "Sana": str(datetime.now()),
         "Foydalanuvchi ID": message.from_user.id,
         "Ism va Familya": data.get('name_surname'),
         "Yoshi": data.get('age'),
@@ -975,56 +1089,37 @@ async def master_start_date_handler(message: types.Message, state: FSMContext):
         "Mutaxassislik": data.get('specialty'),
         "Tajriba (yil)": data.get('experience_years'),
         "Jamoa boshqaruvi": data.get('team_management'),
-        "Portfolio": data.get('portfolio_link'),
+        "Portfolio": portfolio_links,
         "Kutayotgan maosh": data.get('expected_salary_usta'),
         "Baland joyda ishlash": data.get('hardworking_usta'),
         "Ish boshlash sanasi": data.get('start_date_usta'),
-        "Vakansiya turi": "Usta"
+        "Vakansiya": "Usta"
     }
-    
-    # 1. Google Sheets ga yuborish
+
     sheets_success = await send_data_to_sheets(sheets_data, "Usta")
-    
-    # 2. Ma'murga xabar yuborish
+
     admin_success = False
     try:
-        if Config.ADMIN_ID != 0:
-            await bot.send_message(chat_id=Config.ADMIN_ID, text=application_text)
-            admin_success = True
-        else:
-            admin_success = True
+        await bot.send_message(chat_id=Config.ADMIN_ID, text=application_text, parse_mode="HTML", disable_web_page_preview=True)
+        admin_success = True
     except Exception as e:
-        logging.error(f"Ma'murga yuborishda xatolik: {e}")
+        logging.error(f"Admin'ga yuborishda xatolik: {e}")
 
-    # Foydalanuvchiga xabar
     if sheets_success and admin_success:
-        await message.answer("✅ Sizning arizangiz muvaffaqiyatli qabul qilindi va ma'lumotlar bazasiga saqlandi. Menejerlar tez orada aloqaga chiqishadi.", reply_markup=main_menu)
-    elif sheets_success:
-         await message.answer("⚠️ Arizangiz ma'lumotlar bazasiga saqlandi, ammo ma'murga xabar yuborishda texnik xatolik yuz berdi. Tez orada aloqaga chiqishadi.", reply_markup=main_menu)
+        await message.answer("✅ Arizangiz muvaffaqiyatli yuborildi!", reply_markup=main_menu)
     else:
-        await message.answer("❌ Arizani yuborishda texnik xatolik yuz berdi. Iltimos, keyinroq urinib ko'ring yoki ma'lumotlaringizni to'g'ridan-to'g'ri menejerga yuboring.", reply_markup=main_menu)
+        await message.answer("⚠️ Yuborishda xatolik yuz berdi, keyinroq urinib ko‘ring.", reply_markup=main_menu)
 
     await state.clear()
-
 
 # --- Botni ishga tushirish ---
 async def main():
     logging.info("Bot ishga tushmoqda...")
-    if Config.ADMIN_ID == 0:
-        logging.warning("DIQQAT: ADMIN_ID noto'g'ri o'rnatilgan. Xabarlar ma'murga yuborilmaydi.")
-    if not Config.BOT_TOKEN:
-        logging.error("BOT_TOKEN mavjud emas. Bot ishga tushirilmadi.")
-        return
+    await dp.start_polling(bot)
 
-    try:
-        # dp.start_polling ni ishga tushiramiz.
-        await dp.start_polling(bot)
-    except Exception as e:
-        logging.error(f"Botni ishga tushirishda xatolik: {e}")
 
 if __name__ == "__main__":
-    # aiohttp dan foydalanish uchun 'asyncio.run' talab qilinadi
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        logging.info("Bot to'xtatildi.")
+        logging.info("Bot to‘xtatildi.")

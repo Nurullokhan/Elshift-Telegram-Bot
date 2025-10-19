@@ -13,9 +13,11 @@ class Config:
     # ADMIN_ID ni integer (son) turiga o'tkazish
     try:
         ADMIN_ID = int(os.getenv("ADMIN_ID"))
+        GROUP_ID = int(os.getenv("GROUP_ID"))
     except (TypeError, ValueError):
         # Agar ADMIN_ID yuklanmasa yoki noto'g'ri bo'lsa, xavfsiz default qiymat
         ADMIN_ID = 0
+        GROUP_ID = 0
     
     # --- Google Sheets API Sozlamalari ---
     SHEETS_API_URL = os.getenv("SHEETS_API_URL")
@@ -28,7 +30,11 @@ class Config:
     if ADMIN_ID == 0:
         print("DIQQAT: ADMIN_ID o'rnatilmagan yoki noto'g'ri. Ma'mur xabarlari yuborilmaydi.")
 
+    if GROUP_ID == 0:
+        print("DIQQAT: GROUP_ID o'rnatilmagan yoki noto'g'ri. Guruhga xabarlari yuborilmaydi.")
+
 print("BOT_TOKEN:", Config.BOT_TOKEN)
 print("ADMIN_ID:", Config.ADMIN_ID)
+print("GROUP_ID:", Config.GROUP_ID)
 print("SHEETS_API_URL:", Config.SHEETS_API_URL)
 print("SHEETS_API_TOKEN:", Config.SHEETS_API_TOKEN)
