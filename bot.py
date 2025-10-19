@@ -801,10 +801,11 @@ async def master_name_handler(message: types.Message, state: FSMContext):
     await state.update_data(name_surname=message.text)
     
     # 2-savol: Yosh
-    await message.answer("Yoshingiz nechchida?\n"
-                         "<b>(Iltimos, faqat raqam bilan kiriting)</b>",
+    await message.answer("<b>Yoshingiz nechchida?</b>\n"
+                         "(Iltimos, faqat <b>raqam</b> bilan kiriting)",
                          reply_markup=ReplyKeyboardMarkup(
-                             keyboard=[[KeyboardButton(text=CANCEL_BUTTON)]], resize_keyboard=True
+                             keyboard=[[KeyboardButton(text=CANCEL_BUTTON)]],
+                             resize_keyboard=True
                          ),
                          parse_mode="HTML")
     await state.set_state(MasterForm.age)
@@ -889,7 +890,9 @@ async def master_address_district_handler(message: types.Message, state: FSMCont
     
     # 6-savol: Mutaxassislik
     await message.answer("Sizning <b>asosiy mutaxassisligingiz</b> nima?\n"
-                         "<b>(Masalan: Alyukobond montajchisi, Payvandlovchi)</b>", reply_markup=ReplyKeyboardMarkup(
+                         "Kim bo'lib ishlaysiz?"
+                         "Iltimos, to'liq yozing, namuna: <b>Alukabond montajchi</b>",
+                         reply_markup=ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text=CANCEL_BUTTON)]], resize_keyboard=True
     ), parse_mode="HTML")
     await state.set_state(MasterForm.specialty)
@@ -912,7 +915,7 @@ async def master_experience_handler(message: types.Message, state: FSMContext):
     await state.update_data(experience_years=message.text)
     
     # 8-savol: Jamoa boshqaruvi
-    await message.answer("Avval <b>jamoa (brigada) boshqarganmisiz</b>?",
+    await message.answer("Avval <b>jamoa (brigada)</b> boshqarganmisiz?",
                          reply_markup=yes_no_buttons,
                          parse_mode="HTML")
     await state.set_state(MasterForm.team_management)
@@ -928,7 +931,7 @@ async def master_team_handler(message: types.Message, state: FSMContext):
     
     # 9-savol: Portfolio
     await message.answer("Qilgan <b>ishlaringizdan namuna (portfolio)</b> bormi?\n"
-                         "<b>(Havolani kiriting yoki Yo'q deb yozing)</b>", reply_markup=ReplyKeyboardMarkup(
+                         "<b>(Rasm, Video,</b> Portfolio uchun <b>Havola</b> kiriting, aks holda <b>Yo'q</b> deb yozing)", reply_markup=ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text=CANCEL_BUTTON)]], resize_keyboard=True
     ), parse_mode="HTML")
     await state.set_state(MasterForm.portfolio_link)
