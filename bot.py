@@ -1035,8 +1035,8 @@ async def master_more_portfolio_handler(message: types.Message, state: FSMContex
 async def master_expected_salary_handler(message: types.Message, state: FSMContext):
     await state.update_data(expected_salary_usta=message.text)
     await message.answer(
-        "Siz <b>baland joylarda ishlashga tayyormisiz</b>?\n"
-        "<b>(Masalan: fasadda yoki narvonlarda)</b>",
+        "<b>Oldin lesada yoki baland joylarda ishlaganmisiz, ish sharoiti balandroq bo'lsa bunga tayyormisiz?</b>?\n"
+        "<b>(Masalan: fasadda, lesada yoki narvonlarda)</b>",
         reply_markup=yes_no_buttons,
         parse_mode="HTML"
     )
