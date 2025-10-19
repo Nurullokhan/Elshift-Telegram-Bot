@@ -890,7 +890,7 @@ async def master_address_district_handler(message: types.Message, state: FSMCont
     
     # 6-savol: Mutaxassislik
     await message.answer("Sizning <b>asosiy mutaxassisligingiz</b> nima?\n"
-                         "Kim bo'lib ishlaysiz?"
+                         "Kim bo'lib ishlaysiz?\n\n"
                          "Iltimos, to'liq yozing, namuna: <b>Alukabond montajchi</b>",
                          reply_markup=ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text=CANCEL_BUTTON)]], resize_keyboard=True
@@ -937,7 +937,7 @@ async def master_team_handler(message: types.Message, state: FSMContext):
     await state.set_state(MasterForm.portfolio_link)
 
 # --- 9. Portfolio (MasterForm) ---
-@dp.message(MasterForm.portfolio_link, F.content_type.in_({'text', 'photo', 'video'}))
+@dp.message(MasterForm.portfolio_link, F.content_type.in_({'text', 'photo', 'video', 'animation', 'document', 'voice'}))
 async def master_portfolio_handler(message: types.Message, state: FSMContext):
     portfolio_list = (await state.get_data()).get("portfolio", [])
     if not isinstance(portfolio_list, list):
@@ -970,11 +970,25 @@ async def master_portfolio_handler(message: types.Message, state: FSMContext):
             )
             portfolio_link = f"https://t.me/c/{str(Config.GROUP_ID)[4:]}/{sent.message_id}"
 
-        # 🔗 Agar oddiy havola yuborsa
+        # 🔗 Agar oddiy matnli havola yuborsa
+        elif message.text:
+            text = message.text.strip()
+            if text.startswith("http://") or text.startswith("https://"):
+                file_id = text
+                file_type = "link"
+                portfolio_link = file_id
+            else:
+                await message.answer("⚠️ Iltimos, faqat rasm, video yoki to‘liq havola yuboring (http:// yoki https:// bilan boshlanadigan).")
+                return
+
+        # ❌ Agar boshqa turdagi fayl yuborsa (GIF, hujjat, audio, va boshqalar)
         else:
-            file_id = message.text
-            file_type = "link"
-            portfolio_link = file_id
+            await message.answer(
+                "❌ Bu turdagi faylni yuborib bo‘lmaydi.\n"
+                "Iltimos, faqat <b>rasm</b>, <b>video</b> yoki <b>havola</b> yuboring.",
+                parse_mode="HTML"
+            )
+            return
 
         # 🧩 Portfolioni ro‘yxatga qo‘shamiz
         portfolio_list.append({
