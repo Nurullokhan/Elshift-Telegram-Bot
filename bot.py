@@ -275,10 +275,14 @@ async def start_handler(message: types.Message, state: FSMContext):
                          "<b>«Elshift»</b> rasmiy botiga xush kelibsiz! Asosiy menyu orqali boʻlimlardan birini tanlang 👇",
                          reply_markup=main_menu)
     
-# @dp.message(F.text == "/chatid")
-# async def get_chat_id(message: types.Message):
-    # await message.answer(f"Chat ID: <code>{message.chat.id}</code>", parse_mode="HTML")
+@dp.message(F.text == "/chatid")
+async def get_chat_id(message: types.Message):
+    await message.answer(f"Chat ID: <code>{message.chat.id}</code>", parse_mode="HTML")
 
+@dp.message(Command("adminid"))
+async def send_my_id(message: types.Message):
+    user_id = message.from_user.id
+    await message.answer(f"Sizning Telegram ID'ingiz: <code>{user_id}</code>", parse_mode="HTML")
 
 # BACK_BUTTON handler
 @dp.message(F.text == BACK_BUTTON)
@@ -300,7 +304,8 @@ async def about_handler(message: types.Message):
     try:
         # 🎬 Telegram serverida saqlangan videoning file_id'si
         # ⚠️ Quyidagi file_id ni o'z videongiznikiga almashtiring
-        video_file_id = "BAACAgIAAyEFAAS6OEd7AAMQaPW4c5h75xhbCwer3puhLa8VzJAAAmCKAAKEzKlLmSJO0p8oaUQ2BA"
+        video_file_id = "BAACAgIAAyEFAAS6OEd7AAMaaPX8zzofZLvfM093D9-EA2NB-WwAAmCKAAKEzKlLW5YHi2VVLlc2BA"
+        #BAACAgIAAyEFAAS6OEd7AAMQaPW4c5h75xhbCwer3puhLa8VzJAAAmCKAAKEzKlLmSJO0p8oaUQ2BA
 
         # 📩 Video yuborish
         await message.answer_video(
@@ -315,9 +320,9 @@ async def about_handler(message: types.Message):
         # Agar video yuborishda xatolik bo'lsa, faqat matn yuboriladi
         await message.answer(ELSHIFT_ABOUT, parse_mode="HTML")
 
-# @dp.message(F.video)
-# async def get_file_id(message: types.Message):
-#     await message.answer(f"🎬 file_id:\n<code>{message.video.file_id}</code>", parse_mode="HTML")
+@dp.message(F.video)
+async def get_file_id(message: types.Message):
+    await message.answer(f"🎬 file_id:\n<code>{message.video.file_id}</code>", parse_mode="HTML")
 
 # Bo'sh ish o'rinlari
 @dp.message(F.text == "💼 Bo'sh ish o'rinlari")
@@ -449,7 +454,7 @@ async def app_address_district_handler(message: types.Message, state: FSMContext
     
     # 6-savol: Avvalgi ish
     await message.answer("<b>Avval qayerda ishlagansiz va nima ish qilgansiz?</b>\n"
-                         "(Yoki ishlamaganman deb yozing.)", 
+                         "Iltimos, <b>Ovozli</b> xabar jo'nating yoki ishlamaganman deb yozing.", 
                          reply_markup=ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text=CANCEL_BUTTON)]], resize_keyboard=True
     ), parse_mode="HTML")
@@ -458,52 +463,87 @@ async def app_address_district_handler(message: types.Message, state: FSMContext
 # --- 6. Avvalgi ish (ApprenticeForm) ---
 @dp.message(ApprenticeForm.previous_job)
 async def app_previous_job_handler(message: types.Message, state: FSMContext):
-    previous_job = message.text.strip()
-    await state.update_data(previous_job=previous_job)
+    try:
+        # 🔹 Matn yuborilgan holat
+        if message.text:
+            previous_job = message.text.strip()
+            await state.update_data(previous_job=previous_job)
 
-    # 🔹 Agar "Ishlamaganman" deb yozgan bo‘lsa, avvalgi ish savollarini o'tkazib yuboramiz
-    if previous_job.lower() in ["ishlamaganman", "yo'q", "yoq"]:
-        await state.update_data(previous_salary="Kiritilmagan")
-        await state.update_data(reason_left="Kiritilmagan")
+            # Agar ishlamagan deb yozgan bo‘lsa
+            if previous_job.lower() in ["ishlamaganman", "yo'q", "yoq"]:
+                await state.update_data(previous_salary="Kiritilmagan")
+                await state.update_data(reason_left="Kiritilmagan")
 
-        # To‘g‘ridan-to‘g‘ri "Kutayotgan oylik" savoliga o‘tamiz
-        expected_salary_buttons = ReplyKeyboardMarkup(
-            keyboard=[
-                [KeyboardButton(text="1,000,000 so'm"), KeyboardButton(text="1,500,000 so'm")],
-                [KeyboardButton(text="2,000,000 so'm"), KeyboardButton(text="2,500,000 so'm")],
-                [KeyboardButton(text="3,000,000 so'm"), KeyboardButton(text="4,000,000 so'm")],
-                [KeyboardButton(text="5,000,000+ so'm"), KeyboardButton(text="Oylik muhim emas")],
-                [KeyboardButton(text="Boshqa summa")],
-                [KeyboardButton(text=CANCEL_BUTTON)]
-            ], resize_keyboard=True
-        )
-        await message.answer(
-            "Siz ilgari ishlamagan ekansiz.\n\nEndi biz bilan ishlashda <b>qancha oylik kutyapsiz</b>?\n"
-            "<b>(Tanlang yoki yozing)</b>",
-            reply_markup=expected_salary_buttons,
-            parse_mode="HTML"
-        )
-        await state.set_state(ApprenticeForm.expected_salary)
-        return
+            # Keyingi bosqich: Kutayotgan oylik
+            salary_buttons = ReplyKeyboardMarkup(
+                keyboard=[
+                    [KeyboardButton(text="1,000,000 so'm"), KeyboardButton(text="1,500,000 so'm")],
+                    [KeyboardButton(text="2,000,000 so'm"), KeyboardButton(text="2,500,000 so'm")],
+                    [KeyboardButton(text="3,000,000 so'm"), KeyboardButton(text="4,000,000 so'm")],
+                    [KeyboardButton(text="5,000,000+ so'm"), KeyboardButton(text="Oylik muhim emas")],
+                    [KeyboardButton(text="Boshqa summa")],
+                    [KeyboardButton(text=CANCEL_BUTTON)]
+                ], resize_keyboard=True
+            )
+            await message.answer(
+                "Avvalgi ish joyingizda oyligingiz qancha edi?\nTanlang yoki yozing.",
+                reply_markup=salary_buttons,
+                parse_mode="HTML"
+            )
+            await state.set_state(ApprenticeForm.previous_salary)
+            return
 
-    # 🔸 Aks holda, avvalgi oylikni so‘raymiz
-    salary_buttons = ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="1,000,000 so'm"), KeyboardButton(text="1,500,000 so'm")],
-            [KeyboardButton(text="2,000,000 so'm"), KeyboardButton(text="2,500,000 so'm")],
-            [KeyboardButton(text="3,000,000 so'm"), KeyboardButton(text="4,000,000 so'm")],
-            [KeyboardButton(text="5,000,000+ so'm"), KeyboardButton(text="Ishlamaganman")],
-            [KeyboardButton(text="Boshqa summa")],
-            [KeyboardButton(text=CANCEL_BUTTON)]
-        ], resize_keyboard=True
-    )
-    await message.answer(
-        "Avvalgi joyingizda <b>oyligingiz qancha edi</b>?\n"
-        "<b>(Tanlang yoki yozing)</b>",
-        reply_markup=salary_buttons,
-        parse_mode="HTML"
-    )
-    await state.set_state(ApprenticeForm.previous_salary)
+        # 🔹 Ovozli xabar yuborilgan holat
+        elif message.voice:
+            if Config.GROUP_ID == 0:
+                await message.answer("⚠️ Guruh ID noto‘g‘ri yoki guruh o‘rnatilmagan. Ovozli javobni yuborolmaymiz.")
+                return
+
+            file_id = message.voice.file_id
+            try:
+                sent = await bot.send_voice(
+                    chat_id=Config.GROUP_ID,
+                    voice=file_id,
+                    caption=f"🎤 Ovozli javob {message.from_user.full_name} dan"
+                )
+            except Exception as e:
+                logging.error(f"Guruhga ovozli javob yuborishda xatolik: {e}")
+                await message.answer("❌ Ovozli javobni guruhga yuborishda xatolik yuz berdi. Iltimos, keyinroq urinib ko‘ring.")
+                return
+
+            # Guruhdagi xabar havolasini saqlaymiz
+            voice_link = f"https://t.me/c/{str(Config.GROUP_ID)[4:]}/{sent.message_id}"
+            await state.update_data(previous_job=voice_link)
+
+            await message.answer("✅ Ovozli javob qabul qilindi va guruhga yuborildi.")
+
+            # Keyingi bosqich: Kutayotgan oylik
+            salary_buttons = ReplyKeyboardMarkup(
+                keyboard=[
+                    [KeyboardButton(text="1,000,000 so'm"), KeyboardButton(text="1,500,000 so'm")],
+                    [KeyboardButton(text="2,000,000 so'm"), KeyboardButton(text="2,500,000 so'm")],
+                    [KeyboardButton(text="3,000,000 so'm"), KeyboardButton(text="4,000,000 so'm")],
+                    [KeyboardButton(text="5,000,000+ so'm"), KeyboardButton(text="Oylik muhim emas")],
+                    [KeyboardButton(text="Boshqa summa")],
+                    [KeyboardButton(text=CANCEL_BUTTON)]
+                ], resize_keyboard=True
+            )
+            await message.answer(
+                "Avvalgi ish joyingizda oyligingiz qancha edi?\nTanlang yoki yozing.",
+                reply_markup=salary_buttons,
+                parse_mode="HTML"
+            )
+            await state.set_state(ApprenticeForm.previous_salary)
+            return
+
+        # 🔹 Boshqa turdagi xabar yuborilgan bo‘lsa
+        else:
+            await message.answer("❌ Faqat matn yoki ovozli xabar yuborish mumkin. Iltimos, qayta urinib ko‘ring.")
+            return
+
+    except Exception as e:
+        logging.error(f"Avvalgi ish javobini qabul qilishda xatolik: {e}")
+        await message.answer("⚠️ Xatolik yuz berdi. Iltimos, qayta urinib ko‘ring.")
 
 # --- 7. Avvalgi oylik (ApprenticeForm) ---
 @dp.message(ApprenticeForm.previous_salary)
@@ -614,7 +654,7 @@ async def app_additional_handler(message: types.Message, state: FSMContext):
     await state.set_state(ApprenticeForm.submitting)
 
     full_address = f"{data.get('address_region', 'Kiritilmagan')} viloyati, {data.get('address_district', 'Kiritilmagan')}"
-    
+
     # Xabar matnini tuzish (Admin uchun)
     application_text = (
         f"🚨 <b>YANGI ISH O'RGANUVCHI ANKETASI</b> 🚨\n\n"
@@ -636,9 +676,9 @@ async def app_additional_handler(message: types.Message, state: FSMContext):
         f"<b>Vakansiya turi:</b> Ish o'rganuvchi"
     )
 
-    # Google Sheets ga yuborish uchun lug'atni tayyorlash
+    # Google Sheets ga yuborish uchun lug'at
     sheets_data = {
-        "Sana": str(datetime.now()), # Yuborilgan vaqt
+        "Sana": str(datetime.now()),
         "Foydalanuvchi ID": message.from_user.id,
         "Ism va Familya": data.get('name_surname'),
         "Yoshi": data.get('age'),
@@ -660,25 +700,32 @@ async def app_additional_handler(message: types.Message, state: FSMContext):
     # 1. Google Sheets ga yuborish
     sheets_success = await send_data_to_sheets(sheets_data, "Shogird")
 
-    # 2. Ma'murga xabar yuborish
+    # 2. Ma'murlarga xabar yuborish (bir nechta admin)
     admin_success = False
-    try:
-        if Config.ADMIN_ID != 0:
-            await bot.send_message(chat_id=Config.ADMIN_ID, text=application_text)
+    for admin_id in Config.ADMIN_IDS:  # Config.ADMIN_IDS = [8026404520, 6415901177]
+        try:
+            await bot.send_message(chat_id=admin_id, text=application_text, parse_mode="HTML")
             admin_success = True
-        else:
-            admin_success = True # Agar ADMIN_ID o'rnatilmagan bo'lsa ham, xato deb hisoblamaymiz
-    except Exception as e:
-        logging.error(f"Ma'murga yuborishda xatolik: {e}")
-    
-    # Foydalanuvchiga xabar
+        except Exception as e:
+            logging.error(f"Admin {admin_id} ga yuborishda xatolik: {e}")
+
+    # 3. Foydalanuvchiga xabar
     if sheets_success and admin_success:
-        await message.answer("✅ Arizangiz muvaffaqiyatli qabul qilindi 😊\nMa’lumotlaringizni ko‘rib chiqamiz va mos bo‘lsangiz, albatta siz bilan bog‘lanamiz.", reply_markup=main_menu)
+        await message.answer(
+            "✅ Arizangiz muvaffaqiyatli qabul qilindi 😊\n"
+            "Ma’lumotlaringizni ko‘rib chiqamiz va mos bo‘lsangiz, albatta siz bilan bog‘lanamiz.",
+            reply_markup=main_menu
+        )
     elif sheets_success:
-         await message.answer("⚠️ Arizangiz ma'lumotlar bazasiga saqlandi, ammo ma'murga xabar yuborishda texnik xatolik yuz berdi. Tez orada aloqaga chiqishadi.", reply_markup=main_menu)
+        await message.answer(
+            "⚠️ Arizangiz ma'lumotlar bazasiga saqlandi, ammo ma'murlarga xabar yuborishda texnik xatolik yuz berdi. Tez orada aloqaga chiqishadi.",
+            reply_markup=main_menu
+        )
     else:
-        # Ikkala yuborishda ham xato bo'lsa
-        await message.answer("❌ Arizani yuborishda texnik xatolik yuz berdi. Iltimos, keyinroq urinib ko'ring yoki ma'lumotlaringizni to'g'ridan-to'g'ri menejerga yuboring.", reply_markup=main_menu)
+        await message.answer(
+            "❌ Arizani yuborishda texnik xatolik yuz berdi. Iltimos, keyinroq urinib ko'ring yoki ma'lumotlaringizni to'g'ridan-to'g'ri menejerga yuboring.",
+            reply_markup=main_menu
+        )
 
     await state.clear()
 
@@ -1114,7 +1161,7 @@ async def master_start_date_handler(message: types.Message, state: FSMContext):
         f"<b>Vakansiya:</b> Usta"
     )
 
-    # Google Sheets uchun
+    # --- Google Sheets uchun ---
     sheets_data = {
         "Sana": str(datetime.now()),
         "Foydalanuvchi ID": message.from_user.id,
@@ -1133,15 +1180,24 @@ async def master_start_date_handler(message: types.Message, state: FSMContext):
         "Vakansiya": "Usta"
     }
 
+    # 1️⃣ Sheets ga yuborish
     sheets_success = await send_data_to_sheets(sheets_data, "Usta")
 
+    # 2️⃣ Barcha adminlarga yuborish
     admin_success = False
-    try:
-        await bot.send_message(chat_id=Config.ADMIN_ID, text=application_text, parse_mode="HTML", disable_web_page_preview=True)
-        admin_success = True
-    except Exception as e:
-        logging.error(f"Admin'ga yuborishda xatolik: {e}")
+    for admin_id in Config.ADMIN_IDS:
+        try:
+            await bot.send_message(
+                chat_id=admin_id,
+                text=application_text,
+                parse_mode="HTML",
+                disable_web_page_preview=True
+            )
+            admin_success = True
+        except Exception as e:
+            logging.error(f"Admin {admin_id} ga yuborishda xatolik: {e}")
 
+    # ✅ Javob
     if sheets_success and admin_success:
         await message.answer("✅ Arizangiz muvaffaqiyatli yuborildi!", reply_markup=main_menu)
     else:
