@@ -18,9 +18,9 @@ class Config:
 
     # GROUP_ID ni o‘qish
     try:
-        GROUP_ID = int(os.getenv("GROUP_ID", "0"))
+        GROUP_IDS = [int(group_id.strip()) for group_id in os.getenv("GROUP_IDS", "").split(",") if group_id.strip()]
     except (TypeError, ValueError):
-        GROUP_ID = 0
+        GROUP_IDS = []
 
     # --- Google Sheets API Sozlamalari ---
     SHEETS_API_URL = os.getenv("SHEETS_API_URL")
@@ -31,12 +31,12 @@ class Config:
         print("❌ KRITIK XATO: BOT_TOKEN muhit o'zgaruvchisi o‘rnatilmagan!")
     if not ADMIN_IDS:
         print("⚠️ DIQQAT: ADMIN_IDS o‘rnatilmagan yoki noto‘g‘ri. Hech bir admin aniqlanmadi.")
-    if GROUP_ID == 0:
-        print("⚠️ DIQQAT: GROUP_ID o‘rnatilmagan yoki noto‘g‘ri. Guruhga xabar yuborilmaydi.")
+    if GROUP_IDS:
+        print("⚠️ DIQQAT: GROUP_IDS o‘rnatilmagan yoki noto‘g‘ri. Guruhga xabar yuborilmaydi.")
 
 # --- Konsolga chiqarish ---
 print("BOT_TOKEN:", Config.BOT_TOKEN)
 print("ADMIN_IDS:", Config.ADMIN_IDS)
-print("GROUP_ID:", Config.GROUP_ID)
+print("GROUP_IDS:", Config.GROUP_IDS)
 print("SHEETS_API_URL:", Config.SHEETS_API_URL)
 print("SHEETS_API_TOKEN:", Config.SHEETS_API_TOKEN)

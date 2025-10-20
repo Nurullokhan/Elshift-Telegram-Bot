@@ -9,7 +9,7 @@ from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from aiogram.types import (
     ReplyKeyboardMarkup, KeyboardButton, FSInputFile,
-    InlineKeyboardMarkup, InlineKeyboardButton
+    InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
 )
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
@@ -304,8 +304,8 @@ async def about_handler(message: types.Message):
     try:
         # 🎬 Telegram serverida saqlangan videoning file_id'si
         # ⚠️ Quyidagi file_id ni o'z videongiznikiga almashtiring
-        video_file_id = "BAACAgIAAyEFAAS6OEd7AAMaaPX8zzofZLvfM093D9-EA2NB-WwAAmCKAAKEzKlLW5YHi2VVLlc2BA"
-        #BAACAgIAAyEFAAS6OEd7AAMQaPW4c5h75xhbCwer3puhLa8VzJAAAmCKAAKEzKlLmSJO0p8oaUQ2BA
+        video_file_id = "BAACAgIAAyEFAAS6OEd7AAMQaPW4c5h75xhbCwer3puhLa8VzJAAAmCKAAKEzKlLmSJO0p8oaUQ2BA"
+        #BAACAgIAAyEFAAS6OEd7AAMaaPX8zzofZLvfM093D9-EA2NB-WwAAmCKAAKEzKlLW5YHi2VVLlc2BA
 
         # 📩 Video yuborish
         await message.answer_video(
@@ -320,9 +320,9 @@ async def about_handler(message: types.Message):
         # Agar video yuborishda xatolik bo'lsa, faqat matn yuboriladi
         await message.answer(ELSHIFT_ABOUT, parse_mode="HTML")
 
-@dp.message(F.video)
-async def get_file_id(message: types.Message):
-    await message.answer(f"🎬 file_id:\n<code>{message.video.file_id}</code>", parse_mode="HTML")
+# @dp.message(F.video)
+# async def get_file_id(message: types.Message):
+    # await message.answer(f"🎬 file_id:\n<code>{message.video.file_id}</code>", parse_mode="HTML")
 
 # Bo'sh ish o'rinlari
 @dp.message(F.text == "💼 Bo'sh ish o'rinlari")
@@ -493,29 +493,40 @@ async def app_previous_job_handler(message: types.Message, state: FSMContext):
             await state.set_state(ApprenticeForm.previous_salary)
             return
 
+            # admin_success = False
+            # for group_id in Config.GROUP_IDS:  # Config.GROUP_IDS = [8026404520, 6415901177]
+                # try:
+                    # await bot.send_message(chat_id=group_id, text=application_text, parse_mode="HTML")
+                    # admin_success = True
+                # except Exception as e:
+                    # logging.error(f"Admin {group_id} ga yuborishda xatolik: {e}")
+
         # 🔹 Ovozli xabar yuborilgan holat
         elif message.voice:
-            if Config.GROUP_ID == 0:
-                await message.answer("⚠️ Guruh ID noto‘g‘ri yoki guruh o‘rnatilmagan. Ovozli javobni yuborolmaymiz.")
-                return
+            for group_id in Config.GROUP_IDS:
+                if group_id == 0:
+                    await message.answer("⚠️ Guruh ID noto‘g‘ri yoki guruh o‘rnatilmagan. Ovozli javobni yuborolmaymiz.")
+                    return
 
             file_id = message.voice.file_id
-            try:
-                sent = await bot.send_voice(
-                    chat_id=Config.GROUP_ID,
-                    voice=file_id,
-                    caption=f"🎤 Ovozli javob {message.from_user.full_name} dan"
-                )
-            except Exception as e:
-                logging.error(f"Guruhga ovozli javob yuborishda xatolik: {e}")
-                await message.answer("❌ Ovozli javobni guruhga yuborishda xatolik yuz berdi. Iltimos, keyinroq urinib ko‘ring.")
-                return
 
-            # Guruhdagi xabar havolasini saqlaymiz
-            voice_link = f"https://t.me/c/{str(Config.GROUP_ID)[4:]}/{sent.message_id}"
-            await state.update_data(previous_job=voice_link)
+            for group_id in Config.GROUP_IDS:
+                try:
+                    sent = await bot.send_voice(
+                        chat_id=group_id,
+                        voice=file_id,
+                        caption=f"🎤 Ovozli javob {message.from_user.full_name} dan"
+                    )
+                except Exception as e:
+                    logging.error(f"Guruhga ovozli javob yuborishda xatolik: {e}")
+                    await message.answer("❌ Ovozli javobni guruhga yuborishda xatolik yuz berdi. Iltimos, keyinroq urinib ko‘ring.")
+                    return
 
-            await message.answer("✅ Ovozli javob qabul qilindi va guruhga yuborildi.")
+                # Guruhdagi xabar havolasini saqlaymiz
+                voice_link = f"https://t.me/c/{str(group_id)[4:]}/{sent.message_id}"
+                await state.update_data(previous_job=voice_link)
+
+                await message.answer("✅ Ovozli javob qabul qilindi va guruhga yuborildi.")
 
             # Keyingi bosqich: Kutayotgan oylik
             salary_buttons = ReplyKeyboardMarkup(
@@ -581,29 +592,79 @@ async def app_reason_handler(message: types.Message, state: FSMContext):
 async def app_expected_salary_handler(message: types.Message, state: FSMContext):
     await state.update_data(expected_salary=message.text)
 
-    # 9.1. savol: Matematika
-    await message.answer("<b>Matematikani qanchalik bilasiz?</b>\n"
-                         "(Gradus, metr, sm, kvadrat, va boshqa xisob kitoblar bilan ishlash)\n\n"
-                         "Iltimos, Agar erkin ishlay olsingiz <b>Ha</b> yoki <b>Yo'q</b> deb javob bering",
-                         reply_markup=yes_no_buttons,
-                         parse_mode="HTML")
+    # 9.1. savol: Matematika (faqat ovozli xabar)
+    await message.answer(
+        "<b>Matematikani qanchalik bilasiz?</b>\n"
+        "(Gradus, metr, sm, kvadrat va boshqa xisob kitoblar bilan ishlash)\n\n"
+        "Iltimos, <b>ovozi orqali javob yuboring</b> yoki <b>Yo'q</b> tugmasini bosing.",
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard=[
+                [KeyboardButton(text="Yo'q"), KeyboardButton(text=CANCEL_BUTTON)]
+            ],
+            resize_keyboard=True,
+        ),  # faqat Ha/Yo'q tugmalari bilan
+        parse_mode="HTML"
+    )
     await state.set_state(ApprenticeForm.math_skill)
 
-# --- 9.1. Matematika (ApprenticeForm)
-
+# --- 9.1. Matematika (ApprenticeForm) ---
 @dp.message(ApprenticeForm.math_skill)
 async def app_math_skill_handler(message: types.Message, state: FSMContext):
-    if message.text not in ["Ha", "Yo'q"]:
-        await message.answer("Iltimos, faqat <b>Ha</b> yoki <b>Yo'q</b> tugmalaridan birini tanlang.", parse_mode="HTML")
-        return
-    
-    await state.update_data(math_skill=message.text)
+    try:
+        # 🔹 Agar ovozli xabar bo‘lsa
+        if message.voice:
+            file_id = message.voice.file_id
 
-        # 10-savol: Maqsad
-    await message.answer("<b>Hunar o'rganishdan maqsadingiz</b> nima?\nIltimos yozing.", reply_markup=ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text=CANCEL_BUTTON)]], resize_keyboard=True
-    ), parse_mode="HTML")
-    await state.set_state(ApprenticeForm.goal)
+            # Guruhga yuborish
+            for group_id in Config.GROUP_IDS:
+                sent = await bot.send_voice(
+                    chat_id=group_id,
+                    voice=file_id,
+                    caption=f"🎤 Matematikaga javob {message.from_user.full_name} dan"
+                )
+
+                # Telegramdagi havolani saqlaymiz
+                voice_link = f"https://t.me/c/{str(group_id)[4:]}/{sent.message_id}"
+                await state.update_data(math_skill=voice_link)
+
+            await message.answer("✅ Ovozli javob qabul qilindi. Endi davom etamiz.")
+            # Keyingi bosqichga o'tish
+            await message.answer(
+                "<b>Hunar o'rganishdan maqsadingiz</b> nima?\nIltimos yozing.",
+                reply_markup=ReplyKeyboardMarkup(
+                    keyboard=[[KeyboardButton(text=CANCEL_BUTTON)]],
+                    resize_keyboard=True
+                ),
+                parse_mode="HTML"
+            )
+            await state.set_state(ApprenticeForm.goal)
+            return
+
+        # 🔹 Agar matn bo‘lsa, faqat "Yo'q" ni qabul qilamiz
+        elif message.text and message.text == "Yo'q":
+            await state.update_data(math_skill=message.text)
+            await message.answer(
+                "<b>Hunar o'rganishdan maqsadingiz</b> nima?\nIltimos yozing.",
+                reply_markup=ReplyKeyboardMarkup(
+                    keyboard=[[KeyboardButton(text=CANCEL_BUTTON)]],
+                    resize_keyboard=True
+                ),
+                parse_mode="HTML"
+            )
+            await state.set_state(ApprenticeForm.goal)
+            return
+
+        # 🔹 Boshqa matn yuborilsa
+        else:
+            await message.answer(
+                "❌ Iltimos, faqat ovozli xabar yuboring yoki 'Yo'q' tugmasini bosing.",
+                parse_mode="HTML"
+            )
+            return
+
+    except Exception as e:
+        logging.error(f"Matematika javobini qabul qilishda xatolik: {e}")
+        await message.answer("⚠️ Xatolik yuz berdi, iltimos qayta urinib ko‘ring.")
 
 # --- 10. Maqsad (ApprenticeForm) ---
 @dp.message(ApprenticeForm.goal)
@@ -702,12 +763,12 @@ async def app_additional_handler(message: types.Message, state: FSMContext):
 
     # 2. Ma'murlarga xabar yuborish (bir nechta admin)
     admin_success = False
-    for admin_id in Config.ADMIN_IDS:  # Config.ADMIN_IDS = [8026404520, 6415901177]
+    for group_id in Config.GROUP_IDS:  # Config.GROUP_IDS = [8026404520, 6415901177]
         try:
-            await bot.send_message(chat_id=admin_id, text=application_text, parse_mode="HTML")
+            await bot.send_message(chat_id=group_id, text=application_text, parse_mode="HTML")
             admin_success = True
         except Exception as e:
-            logging.error(f"Admin {admin_id} ga yuborishda xatolik: {e}")
+            logging.error(f"Admin {group_id} ga yuborishda xatolik: {e}")
 
     # 3. Foydalanuvchiga xabar
     if sheets_success and admin_success:
@@ -1012,30 +1073,47 @@ async def master_portfolio_handler(message: types.Message, state: FSMContext):
 
     file_id = None
     file_type = None
-    portfolio_link = None
+    portfolio_link = ""
 
     try:
         # 🖼️ Agar rasm yuborsa
         if message.photo:
             file_id = message.photo[-1].file_id
             file_type = "photo"
-            sent = await bot.send_photo(
-                chat_id=Config.GROUP_ID,
-                photo=file_id,
-                caption=f"📁 Portfolio {message.from_user.full_name} dan"
-            )
-            portfolio_link = f"https://t.me/c/{str(Config.GROUP_ID)[4:]}/{sent.message_id}"
+            for group_id in Config.GROUP_IDS:
+                sent = await bot.send_photo(
+                    chat_id=group_id,
+                    photo=file_id,
+                    caption=f"📁 Portfolio {message.from_user.full_name} dan"
+                )
+                portfolio_link = f"https://t.me/c/{str(group_id)[4:]}/{sent.message_id}"
 
         # 🎥 Agar video yuborsa
         elif message.video:
             file_id = message.video.file_id
             file_type = "video"
-            sent = await bot.send_video(
-                chat_id=Config.GROUP_ID,
-                video=file_id,
-                caption=f"📁 Portfolio {message.from_user.full_name} dan"
-            )
-            portfolio_link = f"https://t.me/c/{str(Config.GROUP_ID)[4:]}/{sent.message_id}"
+
+            # 🔄 Foydalanuvchiga yuklanayotganini bildir
+            loading_msg = await message.answer("⏳ Video yuklanmoqda, biroz kuting...")
+
+            for group_id in Config.GROUP_IDS:
+                try:
+                    print("🎥 Video kelgan:", file_id)
+                    print("➡️ Guruhga yuborilmoqda:", group_id)
+                    sent = await bot.send_video(
+                        chat_id=group_id,
+                        video=file_id,
+                        caption=f"📁 Portfolio {message.from_user.full_name} dan"
+                    )
+                    portfolio_link = f"https://t.me/c/{str(group_id)[4:]}/{sent.message_id}"
+                    print("✅ Yuborildi:", sent.message_id)
+                except Exception as e:
+                    logging.error(f"🎥 Video yuborishda xatolik: {e}")
+                    await loading_msg.edit_text("❌ Video guruhga yuborishda xatolik yuz berdi.")
+                    return
+
+            # 🔔 Yuklanish tugagach xabarni yangilaymiz
+            await loading_msg.edit_text("✅ Video muvaffaqiyatli yuklandi va guruhga joylandi!")
 
         # 🔗 Agar oddiy matnli havola yuborsa
         elif message.text:
@@ -1043,12 +1121,15 @@ async def master_portfolio_handler(message: types.Message, state: FSMContext):
             if text.startswith("http://") or text.startswith("https://"):
                 file_id = text
                 file_type = "link"
-                portfolio_link = file_id
+                portfolio_link = text
             else:
-                await message.answer("⚠️ Iltimos, faqat rasm, video yoki to‘liq havola yuboring (http:// yoki https:// bilan boshlanadigan).")
+                await message.answer(
+                    "⚠️ Iltimos, faqat rasm, video yoki to‘liq havola yuboring "
+                    "(http:// yoki https:// bilan boshlanadigan)."
+                )
                 return
 
-        # ❌ Agar boshqa turdagi fayl yuborsa (GIF, hujjat, audio, va boshqalar)
+        # ❌ Boshqa turdagi fayl yuborilsa
         else:
             await message.answer(
                 "❌ Bu turdagi faylni yuborib bo‘lmaydi.\n"
@@ -1061,7 +1142,7 @@ async def master_portfolio_handler(message: types.Message, state: FSMContext):
         portfolio_list.append({
             "file_id": file_id,
             "type": file_type,
-            "link": portfolio_link
+            "link": portfolio_link or ""
         })
         await state.update_data(portfolio=portfolio_list)
 
@@ -1072,6 +1153,9 @@ async def master_portfolio_handler(message: types.Message, state: FSMContext):
             parse_mode="HTML"
         )
         await state.set_state(MasterForm.more_portfolio)
+
+        # 🧠 Konsolga ma'lumot chiqarmoqchi bo‘lsangiz:
+        print(f"📦 Saqlangan portfolio link: {portfolio_link}")
 
     except Exception as e:
         logging.error(f"Portfolio yuborishda xatolik: {e}")
@@ -1086,14 +1170,16 @@ async def master_more_portfolio_handler(message: types.Message, state: FSMContex
     if message.text == "Ha":
         await message.answer(
             "Yana portfolio faylini (rasm/video/havola) yuboring:",
-            parse_mode="HTML"
+            parse_mode="HTML",
+            reply_markup=ReplyKeyboardRemove()  # 🔹 Eski tugmalarni olib tashlaymiz
         )
         await state.set_state(MasterForm.portfolio_link)
     else:
         await message.answer(
             "💰 Endi <b>kutayotgan oylik maoshingizni</b> yozing.\n"
             "<b>(So‘mda yoki kelishilgan protsentda yozing)</b>",
-            parse_mode="HTML"
+            parse_mode="HTML",
+            reply_markup=ReplyKeyboardRemove()  # 🔹 Bu yerda ham tugmalarni yopamiz
         )
         await state.set_state(MasterForm.expected_salary_usta)
 
@@ -1141,7 +1227,7 @@ async def master_start_date_handler(message: types.Message, state: FSMContext):
 
     # 🧩 Bir nechta portfolio havolalarini birlashtiramiz
     portfolio_list = data.get("portfolio", [])
-    portfolio_links = "\n".join([p.get("link", "") for p in portfolio_list]) or "Kiritilmagan"
+    portfolio_links = "\n".join([str(p.get("link") or "") for p in portfolio_list]) or "Kiritilmagan"
 
     application_text = (
         f"👑 <b>YANGI USTA ANKETASI</b> 👑\n\n"
@@ -1185,17 +1271,17 @@ async def master_start_date_handler(message: types.Message, state: FSMContext):
 
     # 2️⃣ Barcha adminlarga yuborish
     admin_success = False
-    for admin_id in Config.ADMIN_IDS:
+    for group_id in Config.GROUP_IDS:
         try:
             await bot.send_message(
-                chat_id=admin_id,
+                chat_id=group_id,
                 text=application_text,
                 parse_mode="HTML",
                 disable_web_page_preview=True
             )
             admin_success = True
         except Exception as e:
-            logging.error(f"Admin {admin_id} ga yuborishda xatolik: {e}")
+            logging.error(f"Admin {group_id} ga yuborishda xatolik: {e}")
 
     # ✅ Javob
     if sheets_success and admin_success:
