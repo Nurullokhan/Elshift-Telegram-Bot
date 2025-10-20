@@ -209,6 +209,19 @@ social_media_keyboard = InlineKeyboardMarkup(
     ]
 )
 
+# --- Restart ---
+@dp.message(Command("restart"))
+async def restart_handler(message: types.Message, state: FSMContext):
+    # 1️⃣ Har qanday holatda state (holat)ni tozalaymiz
+    await state.clear()
+
+    # 2️⃣ Foydalanuvchiga qayta start holatini chiqaramiz
+    await message.answer(
+        "🔄 Bot qayta ishga tushirildi!\n\n"
+        "Quyidagi menyudan kerakli bo‘limni tanlang 👇",
+        reply_markup=main_menu  # sizning asosiy menyuingiz
+    )
+
 # --- Google Sheets ga ma'lumot yuborish uchun soddalashtirilgan funksiya ---
 async def send_data_to_sheets(data: dict, sheet_name: str) -> bool:
     """
