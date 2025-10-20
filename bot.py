@@ -288,13 +288,24 @@ async def about_handler(message: types.Message):
         # 📸 Rasm faylini yuklaymiz
         photo = FSInputFile("elshift_logo.jpg")
 
+        # 📹 Video faylini yuklaymiz
+        video = FSInputFile("elshift_about.mp4")
+
         # 📩 Xabarni yuboramiz
-        await message.answer_photo(
-            photo=photo,
+        await message.answer_video(
+            video=video,
             caption=ELSHIFT_ABOUT,
             reply_markup=social_media_keyboard,
             parse_mode="HTML",
         )
+
+        # 📩 Xabarni yuboramiz
+        # await message.answer_photo(
+            # photo=photo,
+            # caption=ELSHIFT_ABOUT,
+            # reply_markup=social_media_keyboard,
+            # parse_mode="HTML",
+        # )
     except Exception as e:
         logging.error(f"'Biz haqimizda' xabarini yuborishda xatolik: {e}")
         await message.answer(ELSHIFT_ABOUT, parse_mode="HTML")
