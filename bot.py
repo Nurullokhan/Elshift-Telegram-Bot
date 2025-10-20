@@ -1045,6 +1045,17 @@ async def master_team_handler(message: types.Message, state: FSMContext):
 # --- 9. Portfolio (MasterForm) ---
 @dp.message(MasterForm.portfolio_link, F.content_type.in_({'text', 'photo', 'video', 'animation', 'document', 'voice'}))
 async def master_portfolio_handler(message: types.Message, state: FSMContext):
+    # Agar foydalanuvchi “Yo‘q” deb yozsa — keyingi bosqichga o‘tamiz
+    if message.text and message.text.strip().lower() in ["yo'q", "yo‘q", "yoq", "no"]:
+        await state.update_data(portfolio=[])
+        await message.answer(
+            "💰 Endi <b>kutayotgan oylik maoshingizni</b> yozing.\n"
+            "<b>(So‘mda yoki kelishilgan protsentda yozing)</b>",
+            parse_mode="HTML"
+        )
+        await state.set_state(MasterForm.expected_salary_usta)
+        return
+
     portfolio_list = (await state.get_data()).get("portfolio", [])
     if not isinstance(portfolio_list, list):
         portfolio_list = []
@@ -1071,26 +1082,22 @@ async def master_portfolio_handler(message: types.Message, state: FSMContext):
             file_id = message.video.file_id
             file_type = "video"
 
-            # 🔄 Foydalanuvchiga yuklanayotganini bildir
+            # 🔄 Yuklanayotganini bildir
             loading_msg = await message.answer("⏳ Video yuklanmoqda, biroz kuting...")
 
             for group_id in Config.GROUP_IDS:
                 try:
-                    print("🎥 Video kelgan:", file_id)
-                    print("➡️ Guruhga yuborilmoqda:", group_id)
                     sent = await bot.send_video(
                         chat_id=group_id,
                         video=file_id,
                         caption=f"📁 Portfolio {message.from_user.full_name} dan"
                     )
                     portfolio_link = f"https://t.me/c/{str(group_id)[4:]}/{sent.message_id}"
-                    print("✅ Yuborildi:", sent.message_id)
                 except Exception as e:
                     logging.error(f"🎥 Video yuborishda xatolik: {e}")
                     await loading_msg.edit_text("❌ Video guruhga yuborishda xatolik yuz berdi.")
                     return
 
-            # 🔔 Yuklanish tugagach xabarni yangilaymiz
             await loading_msg.edit_text("✅ Video muvaffaqiyatli yuklandi va guruhga joylandi!")
 
         # 🔗 Agar oddiy matnli havola yuborsa
@@ -1131,9 +1138,6 @@ async def master_portfolio_handler(message: types.Message, state: FSMContext):
             parse_mode="HTML"
         )
         await state.set_state(MasterForm.more_portfolio)
-
-        # 🧠 Konsolga ma'lumot chiqarmoqchi bo‘lsangiz:
-        print(f"📦 Saqlangan portfolio link: {portfolio_link}")
 
     except Exception as e:
         logging.error(f"Portfolio yuborishda xatolik: {e}")
