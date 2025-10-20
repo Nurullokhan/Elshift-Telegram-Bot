@@ -285,30 +285,26 @@ async def cancel_handler_in_form(message: types.Message, state: FSMContext):
 @dp.message(F.text == "🏢 Biz haqimizda")
 async def about_handler(message: types.Message):
     try:
-        # 📸 Rasm faylini yuklaymiz
-        photo = FSInputFile("elshift_logo.jpg")
+        # 🎬 Telegram serverida saqlangan videoning file_id'si
+        # ⚠️ Quyidagi file_id ni o'z videongiznikiga almashtiring
+        video_file_id = "BAACAgIAAyEFAAS6OEd7AAMQaPW4c5h75xhbCwer3puhLa8VzJAAAmCKAAKEzKlLmSJO0p8oaUQ2BA"
 
-        # 📹 Video faylini yuklaymiz
-        video = FSInputFile("elshift_about.mp4")
-
-        # 📩 Xabarni yuboramiz
+        # 📩 Video yuborish
         await message.answer_video(
-            video=video,
+            video=video_file_id,
             caption=ELSHIFT_ABOUT,
             reply_markup=social_media_keyboard,
-            parse_mode="HTML",
+            parse_mode="HTML"
         )
 
-        # 📩 Xabarni yuboramiz
-        # await message.answer_photo(
-            # photo=photo,
-            # caption=ELSHIFT_ABOUT,
-            # reply_markup=social_media_keyboard,
-            # parse_mode="HTML",
-        # )
     except Exception as e:
         logging.error(f"'Biz haqimizda' xabarini yuborishda xatolik: {e}")
+        # Agar video yuborishda xatolik bo'lsa, faqat matn yuboriladi
         await message.answer(ELSHIFT_ABOUT, parse_mode="HTML")
+
+# @dp.message(F.video)
+# async def get_file_id(message: types.Message):
+#     await message.answer(f"🎬 file_id:\n<code>{message.video.file_id}</code>", parse_mode="HTML")
 
 # Bo'sh ish o'rinlari
 @dp.message(F.text == "💼 Bo'sh ish o'rinlari")
