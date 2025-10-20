@@ -885,28 +885,6 @@ async def student_address_region_handler(message: types.Message, state: FSMConte
                          parse_mode="HTML")
     await state.set_state(StudentForm.address_district)
 
-# --- 5. Manzil (Tuman/shahar tanlash - StudentForm) ---
-@dp.message(StudentForm.address_district)
-async def master_address_district_handler(message: types.Message, state: FSMContext):
-    data = await state.get_data()
-    region = data.get('address_region')
-    district = message.text
-
-    if region not in REGIONS_DISTRICTS or district not in REGIONS_DISTRICTS[region]:
-        await message.answer("Iltimos, ro'yxatdagi tuman/shaharlardan birini tanlang.")
-        return
-        
-    # address_district ga faqat tumanni saqlaymiz (Viloyat 'address_region' da saqlangan)
-    await state.update_data(address_district=district)
-    
-    # 6-savol: Avval qayerda ishlaganligi
-    await message.answer("Avval qayerda ishlagansiz?\n"
-                         "<b>(Agar hech qayerda ishlamagan bo'lsangiz Yo'q deb yozing.)</b>",
-                         reply_markup=ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text=CANCEL_BUTTON)]], resize_keyboard=True
-    ), parse_mode="HTML")
-    await state.set_state(StudentForm.specialty)
-
 # ======================================
 # --- 👷 USTALAR ANKETASI (MASTER) ---
 # ======================================
