@@ -12,3 +12,13 @@
 - ✅ Portfolio (rasm, video yoki havola) qo'shish imkoniyati
 - ✅ Foydalanuvchiga samimiy xabarlar orqali tasdiqlash
 - ✅ Guruh va admin ID orqali xabarlarni markazlashtirish
+
+---
+
+## Ishga tushirish
+
+1. Kodni klonlash:
+
+```bash
+git clone <repository-url>
+cd <repository-folder>
