@@ -464,17 +464,38 @@ async def app_address_district_handler(message: types.Message, state: FSMContext
 @dp.message(ApprenticeForm.previous_job)
 async def app_previous_job_handler(message: types.Message, state: FSMContext):
     try:
-        # 🔹 Matn yuborilgan holat
+        # 🔹 Matnli javob
         if message.text:
             previous_job = message.text.strip()
             await state.update_data(previous_job=previous_job)
 
-            # Agar ishlamagan deb yozgan bo‘lsa
+            # Agar "ishlamaganman" deb yozgan bo‘lsa
             if previous_job.lower() in ["ishlamaganman", "yo'q", "yoq"]:
                 await state.update_data(previous_salary="Kiritilmagan")
                 await state.update_data(reason_left="Kiritilmagan")
 
-            # Keyingi bosqich: Kutayotgan oylik
+                # 🔸 To‘g‘ridan-to‘g‘ri kutayotgan oylikka o‘tamiz
+                expected_salary_buttons = ReplyKeyboardMarkup(
+                    keyboard=[
+                        [KeyboardButton(text="1,000,000 so'm"), KeyboardButton(text="1,500,000 so'm")],
+                        [KeyboardButton(text="2,000,000 so'm"), KeyboardButton(text="2,500,000 so'm")],
+                        [KeyboardButton(text="3,000,000 so'm"), KeyboardButton(text="4,000,000 so'm")],
+                        [KeyboardButton(text="5,000,000+ so'm"), KeyboardButton(text="Oylik muhim emas")],
+                        [KeyboardButton(text="Boshqa summa")],
+                        [KeyboardButton(text=CANCEL_BUTTON)]
+                    ],
+                    resize_keyboard=True
+                )
+
+                await message.answer(
+                    "Qaysi oylik sizni qoniqtiradi?\nTanlang yoki yozing.",
+                    reply_markup=expected_salary_buttons,
+                    parse_mode="HTML"
+                )
+                await state.set_state(ApprenticeForm.expected_salary)
+                return
+
+            # 🔹 Aks holda avvalgi ish uchun oylik so‘raladi
             salary_buttons = ReplyKeyboardMarkup(
                 keyboard=[
                     [KeyboardButton(text="1,000,000 so'm"), KeyboardButton(text="1,500,000 so'm")],
@@ -483,8 +504,10 @@ async def app_previous_job_handler(message: types.Message, state: FSMContext):
                     [KeyboardButton(text="5,000,000+ so'm"), KeyboardButton(text="Oylik muhim emas")],
                     [KeyboardButton(text="Boshqa summa")],
                     [KeyboardButton(text=CANCEL_BUTTON)]
-                ], resize_keyboard=True
+                ],
+                resize_keyboard=True
             )
+
             await message.answer(
                 "Avvalgi ish joyingizda oyligingiz qancha edi?\nTanlang yoki yozing.",
                 reply_markup=salary_buttons,
@@ -493,23 +516,17 @@ async def app_previous_job_handler(message: types.Message, state: FSMContext):
             await state.set_state(ApprenticeForm.previous_salary)
             return
 
-            # admin_success = False
-            # for group_id in Config.GROUP_IDS:  # Config.GROUP_IDS = [8026404520, 6415901177]
-                # try:
-                    # await bot.send_message(chat_id=group_id, text=application_text, parse_mode="HTML")
-                    # admin_success = True
-                # except Exception as e:
-                    # logging.error(f"Admin {group_id} ga yuborishda xatolik: {e}")
-
-        # 🔹 Ovozli xabar yuborilgan holat
+        # 🔹 Ovozli javob
         elif message.voice:
             for group_id in Config.GROUP_IDS:
                 if group_id == 0:
-                    await message.answer("⚠️ Guruh ID noto‘g‘ri yoki guruh o‘rnatilmagan. Ovozli javobni yuborolmaymiz.")
+                    await message.answer("⚠️ Guruh ID noto‘g‘ri yoki o‘rnatilmagan.")
                     return
 
             file_id = message.voice.file_id
+            voice_link = None
 
+            # Guruhga yuborish
             for group_id in Config.GROUP_IDS:
                 try:
                     sent = await bot.send_voice(
@@ -517,18 +534,16 @@ async def app_previous_job_handler(message: types.Message, state: FSMContext):
                         voice=file_id,
                         caption=f"🎤 Ovozli javob {message.from_user.full_name} dan"
                     )
+                    voice_link = f"https://t.me/c/{str(group_id)[4:]}/{sent.message_id}"
                 except Exception as e:
-                    logging.error(f"Guruhga ovozli javob yuborishda xatolik: {e}")
-                    await message.answer("❌ Ovozli javobni guruhga yuborishda xatolik yuz berdi. Iltimos, keyinroq urinib ko‘ring.")
+                    logging.error(f"Ovozli javobni guruhga yuborishda xatolik: {e}")
+                    await message.answer("❌ Ovozli javobni yuborishda xatolik yuz berdi.")
                     return
 
-                # Guruhdagi xabar havolasini saqlaymiz
-                voice_link = f"https://t.me/c/{str(group_id)[4:]}/{sent.message_id}"
-                await state.update_data(previous_job=voice_link)
+            await state.update_data(previous_job=voice_link)
+            await message.answer("✅ Ovozli javob qabul qilindi va guruhga yuborildi.")
 
-                await message.answer("✅ Ovozli javob qabul qilindi va guruhga yuborildi.")
-
-            # Keyingi bosqich: Kutayotgan oylik
+            # Keyingi bosqich: avvalgi oylik
             salary_buttons = ReplyKeyboardMarkup(
                 keyboard=[
                     [KeyboardButton(text="1,000,000 so'm"), KeyboardButton(text="1,500,000 so'm")],
@@ -537,8 +552,10 @@ async def app_previous_job_handler(message: types.Message, state: FSMContext):
                     [KeyboardButton(text="5,000,000+ so'm"), KeyboardButton(text="Oylik muhim emas")],
                     [KeyboardButton(text="Boshqa summa")],
                     [KeyboardButton(text=CANCEL_BUTTON)]
-                ], resize_keyboard=True
+                ],
+                resize_keyboard=True
             )
+
             await message.answer(
                 "Avvalgi ish joyingizda oyligingiz qancha edi?\nTanlang yoki yozing.",
                 reply_markup=salary_buttons,
@@ -547,7 +564,7 @@ async def app_previous_job_handler(message: types.Message, state: FSMContext):
             await state.set_state(ApprenticeForm.previous_salary)
             return
 
-        # 🔹 Boshqa turdagi xabar yuborilgan bo‘lsa
+        # 🔹 Boshqa turdagi xabarlar (rasm, fayl va hokazo)
         else:
             await message.answer("❌ Faqat matn yoki ovozli xabar yuborish mumkin. Iltimos, qayta urinib ko‘ring.")
             return
@@ -672,25 +689,38 @@ async def app_goal_handler(message: types.Message, state: FSMContext):
     await state.update_data(goal=message.text)
     
     # 11-savol: Baland joyda ishlash
-    await message.answer("Oldin lesada yoki baland joylarda ishlaganmisiz, ish sharoiti balandroq bo'lsa bunga tayyormisiz?",
-                         reply_markup=yes_no_buttons,
-                         parse_mode="HTML")
+    await message.answer(
+        "Oldin lesada yoki baland joylarda ishlaganmisiz?\n"
+        "Agar ish joyi balandroq bo‘lsa, bunga tayyormisiz?\n\n"
+        "<i>Masalan:</i>\n"
+        "— Ha, ishlaganman\n"
+        "— Yo‘q, lekin sinab ko‘rmoqchiman\n"
+        "— Baland joydan qo‘rqaman",
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard=[[KeyboardButton(text=CANCEL_BUTTON)]],
+            resize_keyboard=True
+        ),
+        parse_mode="HTML"
+    )
     await state.set_state(ApprenticeForm.hardworking)
+
 
 # --- 11. Baland joyda ishlash savoli (ApprenticeForm) ---
 @dp.message(ApprenticeForm.hardworking)
 async def app_hardworking_handler(message: types.Message, state: FSMContext):
-    if message.text not in ["Ha", "Yo'q", "O'rganmoqchiman"]:
-        await message.answer("Iltimos, <b>Ha</b> / <b>Yo'q</b> yoki <b>O'rganmoqchiman</b> tugmalaridan birini tanlang.", parse_mode="HTML")
-        return
-        
-    await state.update_data(hardworking=message.text)
+    hardworking = message.text.strip()
+    await state.update_data(hardworking=hardworking)
 
     # 12-savol: Ish boshlash
-    await message.answer("<b>Qachondan ish boshlay olasiz</b>?\n"
-                         "<b>(Masalan: Ertadan / Bir haftada)</b>", reply_markup=ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text=CANCEL_BUTTON)]], resize_keyboard=True
-    ), parse_mode="HTML")
+    await message.answer(
+        "<b>Qachondan ish boshlay olasiz?</b>\n"
+        "<i>Masalan:</i> Ertadan / Bir haftada / Dushanbadan",
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard=[[KeyboardButton(text=CANCEL_BUTTON)]],
+            resize_keyboard=True
+        ),
+        parse_mode="HTML"
+    )
     await state.set_state(ApprenticeForm.start_date)
 
 # --- 12. Ish boshlash (ApprenticeForm) ---
