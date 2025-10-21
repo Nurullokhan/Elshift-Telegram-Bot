@@ -329,13 +329,15 @@ async def jobs_handler(message: types.Message):
     await message.answer("👷 <b>Usta</b> - Tajribangiz bo'lsa, tayyor obyektlar va bonusli ish sizni kutmoqda.\n\n👨‍🎓 <b>Ish o'rganuvchi</b> - 6 - 12 oyda usta bo'lib, <b>Elshift</b> jamoasida o'z o'rningizga ega bo'ling.\n\n👇 Quyidagilardan birini tanlang.",
                          reply_markup=jobs_menu)
 
-# Aloqa
+# 📍 Aloqa
 @dp.message(F.text == "📍 Manzil")
 async def contact_handler(message: types.Message):
     text = (
-        "📍 <b>Manzil:</b> <a href='https://maps.app.goo.gl/rE3iPvTM4Z3ezf1h7'>Farg'ona viloyati, Marg'ilon shahri</a>\n"
-        "🕒 <b>Ish vaqti:</b> 09:00 – 18:00\n"
-        "☪️ <b>Dam olish kuni:</b> Juma"
+        "🏢 <b>Bizning manzil:</b>\n\n"
+        "<a href='https://maps.app.goo.gl/rE3iPvTM4Z3ezf1h7'>Farg‘ona viloyati, Marg‘ilon shahri</a>\n\n"
+        "🕒 <b>Ish vaqti:</b> 09:00 — 18:00\n"
+        "☪️ <b>Dam olish kuni:</b> Juma\n\n"
+        "Sizni ofisimizda kutib qolamiz! 😊"
     )
     await message.answer(text, parse_mode="HTML", disable_web_page_preview=True)
 
