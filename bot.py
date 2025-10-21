@@ -333,7 +333,7 @@ async def jobs_handler(message: types.Message):
 @dp.message(F.text == "📍 Manzil")
 async def contact_handler(message: types.Message):
     text = (
-        "🏢 <b>Bizning manzil:</b>\n\n"
+        "🏢 <b>Bizning manzil:</b>\n"
         "<a href='https://maps.app.goo.gl/rE3iPvTM4Z3ezf1h7'>Farg‘ona viloyati, Marg‘ilon shahri</a>\n\n"
         "🕒 <b>Ish vaqti:</b> 09:00 — 18:00\n"
         "☪️ <b>Dam olish kuni:</b> Juma\n\n"
