@@ -118,8 +118,7 @@ ELSHIFT_ABOUT = (
     "Bizni qadriyatimiz:\n\n"
     "<b>Mijozlarga oʻz vaqtida va sifatli xizmat koʻrsatish - bu bizning eng asosiy tamoyilimiz.</b>\n\n"
     "Elshift - tanlovingizni oqlaydigan sifatli va ishonchli alukabond xizmati!\n\n"
-    "<i>Yuqoridagi videoni koʻrib kompaniya  haqida ma'lumotlarni  rahbardan bilib olishingiz mumkin!</i>\n\n"
-    "📞 Aloqa uchun : +998947010555"
+    "<i>Yuqoridagi videoni koʻrib kompaniya  haqida ma'lumotlarni  rahbardan bilib olishingiz mumkin!</i>\n"
 )
 
 # --- Umumiy Tugmalar ---
@@ -133,7 +132,7 @@ JOB_TITLE_ROVER = "👨‍🎓 Shogird (Roverchi)"
 main_menu = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="🏢 Biz haqimizda"), KeyboardButton(text="💼 Bo'sh ish o'rinlari")],
-        [KeyboardButton(text="📞 Aloqa")],
+        [KeyboardButton(text="📍 Manzil")],
     ],
     resize_keyboard=True
 )
@@ -331,12 +330,10 @@ async def jobs_handler(message: types.Message):
                          reply_markup=jobs_menu)
 
 # Aloqa
-@dp.message(F.text == "📞 Aloqa")
+@dp.message(F.text == "📍 Manzil")
 async def contact_handler(message: types.Message):
     text = (
-        "📞 <b>Aloqa ma'lumotlari</b>\n\n"
         "📍 <b>Manzil:</b> <a href='https://maps.app.goo.gl/rE3iPvTM4Z3ezf1h7'>Farg'ona viloyati, Marg'ilon shahri</a>\n"
-        "📱 <b>Telefon:</b> +998947010555\n"
         "🕒 <b>Ish vaqti:</b> 09:00 – 18:00\n"
         "☪️ <b>Dam olish kuni:</b> Juma"
     )
