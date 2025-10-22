@@ -375,7 +375,7 @@ async def app_name_handler(message: types.Message, state: FSMContext):
 @dp.message(ApprenticeForm.age)
 async def app_age_handler(message: types.Message, state: FSMContext):
     text = message.text.strip()
-    if not text.isdigit() or not (16 <= int(text) <= 60):
+    if not text.isdigit() or not (16 <= int(text) <= 30):
         await message.answer("Iltimos, yoshingizni faqat raqamlarda kiriting (Masalan: 21) va 18 yoshdan katta bo'lsin.")
         return
         
@@ -949,7 +949,7 @@ async def master_name_handler(message: types.Message, state: FSMContext):
 @dp.message(MasterForm.age)
 async def master_age_handler(message: types.Message, state: FSMContext):
     text = message.text.strip()
-    if not text.isdigit() or not (18 <= int(text) <= 65):
+    if not text.isdigit() or not (18 <= int(text) <= 40):
         await message.answer("Iltimos, yoshingizni faqat raqamlarda kiriting (Masalan: 30) va 18 yoshdan katta bo'lsin.")
         return
         
