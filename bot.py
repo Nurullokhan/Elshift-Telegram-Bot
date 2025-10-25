@@ -131,7 +131,7 @@ JOB_TITLE_ROVER = "👨‍🎓 Shogird (Roverchi)"
 # --- Tugmalar (asosiy menyu) ---
 main_menu = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="🏢 Biz haqimizda"), KeyboardButton(text="💼 Bo'sh ish o'rinlari")],
+        [KeyboardButton(text="🏢 <b>Elshift</b> - haqida"), KeyboardButton(text="💼 Bo'sh ish o'rinlari")],
         [KeyboardButton(text="📍 Manzil")],
     ],
     resize_keyboard=True
