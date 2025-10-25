@@ -270,11 +270,28 @@ async def send_data_to_sheets(data: dict, sheet_name: str) -> bool:
 @dp.message(Command("start"))
 async def start_handler(message: types.Message, state: FSMContext):
     await state.clear()
+    try:
+        video_file_id = "BAACAgIAAyEFAAS6OEd7AAMQaPW4c5h75xhbCwer3puhLa8VzJAAAmCKAAKEzKlLmSJO0p8oaUQ2BA"
+        #BAACAgIAAyEFAAS6OEd7AAMaaPX8zzofZLvfM093D9-EA2NB-WwAAmCKAAKEzKlLW5YHi2VVLlc2BA
+
+        # 📩 Video yuborish
+        await message.answer_video(
+            video=video_file_id,
+            caption=ELSHIFT_ABOUT,
+            reply_markup=social_media_keyboard,
+            parse_mode="HTML"
+        )
+    
+    except Exception as e:
+        logging.error(f"'Biz haqimizda' xabarini yuborishda xatolik: {e}")
+        # Agar video yuborishda xatolik bo'lsa, faqat matn yuboriladi
+        await message.answer(ELSHIFT_ABOUT, parse_mode="HTML")
     await message.answer("Assalomu alaykum!\n\n"
                          "<b>«Elshift»</b> rasmiy botiga xush kelibsiz! Asosiy menyu orqali boʻlimlardan birini tanlang 👇",
-                         reply_markup=main_menu)
+                         reply_markup=main_menu
+                         )
     
-@dp.message(F.text == "/chatid")
+@dp.message(F.text == "chatid")
 async def get_chat_id(message: types.Message):
     await message.answer(f"Chat ID: <code>{message.chat.id}</code>", parse_mode="HTML")
 
