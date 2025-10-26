@@ -400,7 +400,7 @@ async def app_age_handler(message: types.Message, state: FSMContext):
 
     # 3-savol: Telefon raqami
     await message.answer("<b>Telefon raqamingizni</b> kiriting yoki tugma orqali <b>ulashing</b>:\n"
-                         "<b>(Misol: +998901234567)</b>",
+                         "<b>(Misol: +998916505141)</b>",
                          reply_markup=phone_keyboard,
                          parse_mode="HTML")
     await state.set_state(ApprenticeForm.phone)
@@ -879,7 +879,7 @@ async def student_age_handler(message: types.Message, state: FSMContext):
 
     # 3-savol: Telefon raqami
     await message.answer("<b>Telefon raqamingizni</b> kiriting yoki tugma orqali <b>ulashing</b>:\n"
-                         "<b>(Namuna: +998901234567)</b>",
+                         "<b>(Namuna: +998916505141)</b>",
                          reply_markup=phone_keyboard,
                          parse_mode="HTML")
     await state.set_state(StudentForm.phone)
@@ -974,7 +974,7 @@ async def master_age_handler(message: types.Message, state: FSMContext):
 
     # 3-savol: Telefon raqami
     await message.answer("<b>Telefon raqamingizni</b> kiriting yoki tugma orqali <b>ulashing</b>:\n"
-                         "<b>(Misol: +998901234567)</b>",
+                         "<b>(Misol: +998916505141)</b>",
                          reply_markup=phone_keyboard,
                          parse_mode="HTML")
     await state.set_state(MasterForm.phone)
