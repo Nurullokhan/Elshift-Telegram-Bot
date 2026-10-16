@@ -7,9 +7,8 @@ async def send_data_to_sheets(data: dict, sheet_name: str) -> bool:
     Ma'lumotlarni Google Sheets ga yuboradi (Apps Script Web App orqali).
     Faqat 200 status keldi va 'success' bo'lsa True qaytaradi.
     """
-
     if not Config.SHEETS_API_URL or not Config.SHEETS_API_TOKEN:
-        logging.error("❌ Config.SHEETS_API_URL yoki Config.SHEETS_API_TOKEN belgilanmagan.")
+        logging.warning("⚠️ Config.SHEETS_API_URL yoki Config.SHEETS_API_TOKEN belgilanmagan. Sheets ga yuborish o'tkazib yuborildi.")
         return False
 
     payload = {
@@ -19,8 +18,9 @@ async def send_data_to_sheets(data: dict, sheet_name: str) -> bool:
     }
 
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(Config.SHEETS_API_URL, json=payload, timeout=15) as response:
+        timeout = aiohttp.ClientTimeout(total=15)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.post(Config.SHEETS_API_URL, json=payload) as response:
                 text = await response.text()
                 if response.status == 200:
                     try:

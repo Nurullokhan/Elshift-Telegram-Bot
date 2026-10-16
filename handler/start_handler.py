@@ -1,14 +1,12 @@
-from aiogram import types
+from aiogram import Router, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram import Dispatcher
-from aiogram.fsm.storage.memory import MemoryStorage
-from keyboards import main_menu
+from keyboards.main_menu import main_menu
 
-dp = Dispatcher(storage=MemoryStorage)
+router = Router()
 
 # --- /start komandasi uchun handler ---
-@dp.message(Command("start"))
+@router.message(Command("start"))
 async def start_handler(message: types.Message, state: FSMContext):
     await state.clear()  # har qanday eski holatni tozalash
     await message.answer(
